@@ -11,7 +11,6 @@ import com.sxtanna.aspirianmc.config.Configs.DISPLAY_DEF_ICON
 import com.sxtanna.aspirianmc.config.Configs.PAYOUTS_DEF_RATIO
 import com.sxtanna.aspirianmc.exts.buildItemStack
 import com.sxtanna.aspirianmc.exts.formatToTwoPlaces
-import com.sxtanna.aspirianmc.exts.korm
 import com.sxtanna.aspirianmc.manager.HiringsManager
 import com.sxtanna.aspirianmc.market.Product
 import org.bukkit.Bukkit
@@ -141,8 +140,6 @@ class Company() : Named, Identified<UUID>, Displayable {
 
         this.staffer.addAll(staffer)
         this.product.addAll(product)
-
-        println(korm.push(this))
 
         return this
     }
