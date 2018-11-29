@@ -1,0 +1,50 @@
+#
+# member-max = Max employees in a company
+# create-fee = Cost of creating a company
+#
+# top-max = Maximum entries returned for /company top
+# name-max = The maximum length of a company name
+#
+# def-ratio = The default payout ratio for employees (in percentage)
+# def-taxes = The default tax on products (in percentage)
+# max-taxes = The maximum tax on products (in percentage)
+#
+# respond-time = How much time a player has to respond to a hire request (in seconds)
+#
+# live-time = How much time a company stays sponsored after purchasing it (in seconds)
+# slot-cost = How much it costs to purchase a sponsored slot
+#
+# def-icon = Default company icon
+#
+company:
+  member-max: 100
+  create-fee: 1000
+  command:
+    top-max: 10
+    name-max: 15
+  payouts:
+    def-ratio: 75
+    def-taxes: 5
+    max-taxes: 75
+  hirings:
+    respond-time: 120
+  sponsor:
+    live-time: 3600
+    slot-cost: 1000
+  display:
+    def-icon: DIORITE
+
+#
+# item-max = Max amount of items a company can put up for sell (by slot, not by itemstack count)
+# icon-fee = Cost of changing the company's icon
+#
+markets:
+  item-max: 100
+  icon-fee: 500
+
+#
+# LOCAL = Local database using Korm  | https://gh.sxtanna.com/KORM
+# KUERY = MySQL database using Kuery | https://gh.sxtanna.com/KDatabases
+#
+storage:
+  database-type: KUERY

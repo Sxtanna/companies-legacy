@@ -1,0 +1,10 @@
+name: Companies
+main: com.sxtanna.aspirianmc.Companies
+
+author: Sxtanna
+version:  1.0
+api-version: 1.13
+
+website: https://gh.sxtanna.com
+
+depend: [Vault]
