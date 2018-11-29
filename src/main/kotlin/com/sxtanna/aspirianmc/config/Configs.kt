@@ -12,7 +12,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Int>("company.member.max") {
 
         override fun value(yaml: ConfigurationSection): Int {
-            return yaml.getInt(pathString, 100)
+            return yaml.getInt(pathString, 100).coerceAtLeast(1)
         }
 
     }
@@ -21,7 +21,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Double>("company.create-fee") {
 
         override fun value(yaml: ConfigurationSection): Double {
-            return yaml.getDouble(pathString, 0.0)
+            return yaml.getDouble(pathString, 0.0).coerceAtLeast(0.0)
         }
 
     }
@@ -31,7 +31,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Long>("company.command.top-max") {
 
         override fun value(yaml: ConfigurationSection): Long {
-            return yaml.getLong(pathString, 10L)
+            return yaml.getLong(pathString, 10L).coerceAtLeast(0)
         }
 
     }
@@ -40,7 +40,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Int>("company.command.name-max") {
 
         override fun value(yaml: ConfigurationSection): Int {
-            return yaml.getInt(pathString, 15)
+            return yaml.getInt(pathString, 15).coerceAtLeast(1)
         }
 
     }
@@ -50,7 +50,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Int>("company.payouts.def-ratio") {
 
         override fun value(yaml: ConfigurationSection): Int {
-            return yaml.getInt(pathString, 75)
+            return yaml.getInt(pathString, 75).coerceAtLeast(0)
         }
 
     }
@@ -59,7 +59,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Int>("company.payouts.def-taxes") {
 
         override fun value(yaml: ConfigurationSection): Int {
-            return yaml.getInt(pathString, 5)
+            return yaml.getInt(pathString, 5).coerceAtLeast(0)
         }
 
     }
@@ -68,7 +68,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Int>("company.payouts.max-taxes") {
 
         override fun value(yaml: ConfigurationSection): Int {
-            return yaml.getInt(pathString, 75).coerceAtMost(100)
+            return yaml.getInt(pathString, 75).coerceIn(0, 100)
         }
 
     }
@@ -78,7 +78,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Long>("company.hirings.respond-time") {
 
         override fun value(yaml: ConfigurationSection): Long {
-            return yaml.getLong(pathString, 120L)
+            return yaml.getLong(pathString, 120L).coerceAtLeast(0L)
         }
 
     }
@@ -87,7 +87,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Long>("company.sponsor.live-time") {
 
         override fun value(yaml: ConfigurationSection): Long {
-            return yaml.getLong(pathString, 3600)
+            return yaml.getLong(pathString, 3600).coerceAtLeast(0)
         }
 
     }
@@ -96,7 +96,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Double>("company.sponsor.slot-cost") {
 
         override fun value(yaml: ConfigurationSection): Double {
-            return yaml.getDouble(pathString, 0.0)
+            return yaml.getDouble(pathString, 0.0).coerceAtLeast(0.0)
         }
 
     }
@@ -132,7 +132,7 @@ sealed class Configs<T : Any>(final override val pathString: String) : ConfigPat
         : Configs<Double>("markets.icon-fee") {
 
         override fun value(yaml: ConfigurationSection): Double {
-            return yaml.getDouble(pathString, 0.0)
+            return yaml.getDouble(pathString, 0.0).coerceAtLeast(0.0)
         }
 
     }
