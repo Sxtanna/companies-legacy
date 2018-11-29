@@ -1,6 +1,7 @@
 package com.sxtanna.aspirianmc.store
 
 import com.sxtanna.aspirianmc.base.Identified
+import com.sxtanna.aspirianmc.exts.ensureUsable
 import com.sxtanna.aspirianmc.store.base.Store
 import com.sxtanna.korm.Korm
 import com.sxtanna.korm.writer.KormWriter
@@ -48,9 +49,8 @@ open class FileStore<T : Identified<I>, I : Any>(private val folder: File, priva
     private fun getFileForData(uuid: I, createIfNotFound: Boolean): File {
         val file = folder.resolve("$uuid.korm")
 
-        if (createIfNotFound && file.exists().not()) {
-            file.parentFile.mkdirs()
-            file.createNewFile()
+        if (createIfNotFound) {
+            ensureUsable(file)
         }
 
         return file
