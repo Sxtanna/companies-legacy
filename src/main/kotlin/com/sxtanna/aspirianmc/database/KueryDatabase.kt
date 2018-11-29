@@ -5,6 +5,7 @@ import com.sxtanna.aspirianmc.company.Company
 import com.sxtanna.aspirianmc.company.Staffer
 import com.sxtanna.aspirianmc.config.Configs.COMPANY_COMMAND_TOP_MAX
 import com.sxtanna.aspirianmc.database.base.CompanyDatabase
+import com.sxtanna.aspirianmc.exts.ensureUsable
 import com.sxtanna.aspirianmc.exts.korm
 import com.sxtanna.db.Kuery
 import com.sxtanna.db.KueryTask
@@ -43,14 +44,10 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
         val file = pluginFolder.resolve("sql_config.korm")
 
         con = try {
+            require(file.exists())
             korm.pull(file).to() ?: KueryConfig.DEFAULT
         } catch (ex: Exception) {
-            if (file.exists().not()) {
-                file.parentFile.mkdirs()
-                file.createNewFile()
-            }
-
-            korm.push(KueryConfig.DEFAULT, file)
+            korm.push(KueryConfig.DEFAULT, ensureUsable(file))
 
             KueryConfig.DEFAULT
         }
