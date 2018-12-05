@@ -140,7 +140,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
             lore = listOf(
                     "",
                     "&fBuy a sponsor slot for: &a${plugin.companyManager.sponsorManager.humanReadableTime()}",
-                    "&7Cost: &a${plugin.companyManager.sponsorManager.slotCost.formatToTwoPlaces()}"
+                    "&7Cost: &a$${plugin.companyManager.sponsorManager.slotCost.formatToTwoPlaces()}"
             )
         }
     }
