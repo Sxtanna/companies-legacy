@@ -85,6 +85,10 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
 
     private fun attemptPurchaseProduct(product: Product, player: Player): Result<Unit> = Result.of {
+        if (product.stafferUUID == player.uniqueId) {
+            fail("you cannot purchase your own products")
+        }
+
         when (val response = plugin.vaultHook.attemptTake(player, product.cost)) {
             is Some -> when (response.data.transactionSuccess()) {
                 true -> {
