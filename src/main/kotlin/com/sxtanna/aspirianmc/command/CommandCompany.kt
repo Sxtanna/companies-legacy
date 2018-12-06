@@ -16,6 +16,7 @@ import com.sxtanna.aspirianmc.config.Garnish.*
 import com.sxtanna.aspirianmc.exts.*
 import com.sxtanna.aspirianmc.market.Product
 import com.sxtanna.aspirianmc.market.menu.GlobalCompanyMarketMenu
+import com.sxtanna.aspirianmc.menu.impl.ConfirmationMenu
 import org.bukkit.Material.AIR
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -430,19 +431,34 @@ class CommandCompany(override val plugin: Companies)
 
             val company = input.joinToString(" ").takeIf { it.isNotBlank() } ?: return reply("you must define the name of the company!")
 
-            when (val result = plugin.companyManager.attemptCreate(company, player)) {
-                is Some -> {
-                    reply("successfully created your company: $company")
-                    result.data.hire(staffer)
 
-                    plugin.garnishManager.send(player, COMPANY_CREATE_PURCHASE_PASS)
-                }
-                is None -> {
-                    reply("failed to create company: ${result.info}")
+            val confirmation = object : ConfirmationMenu("creating a company") {
 
-                    plugin.garnishManager.send(player, COMPANY_CREATE_PURCHASE_FAIL)
+                override fun onPass(action: MenuAction) {
+                    when (val result = plugin.companyManager.attemptCreate(company, player)) {
+                        is Some -> {
+                            reply("successfully created your company: $company")
+                            result.data.hire(staffer)
+
+                            plugin.garnishManager.send(player, COMPANY_CREATE_PURCHASE_PASS)
+                        }
+                        is None -> {
+                            reply("failed to create company: ${result.info}")
+
+                            plugin.garnishManager.send(player, COMPANY_CREATE_PURCHASE_FAIL)
+                        }
+                    }
+
+                    action.who.closeInventory()
                 }
+
+                override fun onFail(action: MenuAction) {
+                    action.who.closeInventory()
+                }
+
             }
+
+            confirmation.open(player)
         }
 
     }
@@ -846,8 +862,8 @@ class CommandCompany(override val plugin: Companies)
 
 
         override fun CommandContext.evaluate() {
-            retrieveStaffer("close a company!") { _, staffer ->
-                processCompanyClose(staffer)
+            retrieveStaffer("close a company!") { player, staffer ->
+                processCompanyClose(player, staffer)
             }
         }
 
@@ -856,20 +872,34 @@ class CommandCompany(override val plugin: Companies)
         }
 
 
-        private fun CommandContext.processCompanyClose(staffer: Staffer) {
+        private fun CommandContext.processCompanyClose(player: Player, staffer: Staffer) {
             retrieveCompany(staffer) { company ->
                 if (company.isOwner(staffer.uuid).not()) {
                     return@retrieveCompany reply("you must be the owner of the company to close it")
                 }
 
-                when (val result = plugin.companyManager.kill(company)) {
-                    is Some -> {
-                        reply("successfully closed your company")
+                val confirmation = object : ConfirmationMenu("closing your company") {
+
+                    override fun onPass(action: MenuAction) {
+                        when (val result = plugin.companyManager.kill(company)) {
+                            is Some -> {
+                                reply("successfully closed your company")
+                            }
+                            is None -> {
+                                reply("failed to close your company: ${result.info}")
+                            }
+                        }
+
+                        action.who.closeInventory()
                     }
-                    is None -> {
-                        reply("failed to close your company: ${result.info}")
+
+                    override fun onFail(action: MenuAction) {
+                        action.who.closeInventory()
                     }
+
                 }
+
+                confirmation.open(player)
             }
         }
 
