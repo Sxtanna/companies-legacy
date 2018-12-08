@@ -19,6 +19,7 @@
 company:
   member-max: 100
   create-fee: 1000
+  rename-fee: 1000
   command:
     top-max: 10
     name-max: 15
