@@ -17,7 +17,7 @@ import org.bukkit.Material.REPEATING_COMMAND_BLOCK
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType.RIGHT
 
-class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null) : Menu("&nProducts&r » ${company.name}", Row.R_6) {
+class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null) : Menu("&nProducts&r &l»&r ${company.name}", Row.R_6) {
 
     private val pagination = ChosenPagination()
 

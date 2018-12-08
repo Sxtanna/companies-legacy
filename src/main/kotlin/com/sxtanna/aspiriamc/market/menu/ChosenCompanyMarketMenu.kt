@@ -17,7 +17,7 @@ import com.sxtanna.aspiriamc.menu.base.Row
 import com.sxtanna.aspiriamc.menu.impl.ConfirmationMenu
 import org.bukkit.entity.Player
 
-class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val prevMenu: Menu? = null) : Menu("&nMarketplace&r » ${company.name}", Row.R_6) {
+class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val prevMenu: Menu? = null) : Menu("&nMarketplace&r &l»&r ${company.name}", Row.R_6) {
 
     private val pagination = ChosenPagination()
 

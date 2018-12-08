@@ -14,7 +14,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import java.util.*
 
-class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null) : Menu("&nManage&r » ${company.name}", Row.R_4) {
+class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null) : Menu("&nManage&r &l»&r ${company.name}", Row.R_4) {
 
     private val pagination = StafferPagination()
 
