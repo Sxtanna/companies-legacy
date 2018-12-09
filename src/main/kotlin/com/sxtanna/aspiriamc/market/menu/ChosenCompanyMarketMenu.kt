@@ -62,6 +62,8 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                                 if (who.inventory.addItem(item.data).isNotEmpty()) {
                                     reply("&cyour inventory is full")
 
+                                    plugin.vaultHook.attemptGive(who.uniqueId, it.cost)
+
                                     plugin.garnishManager.send(who, MARKET_PRODUCT_PURCHASE_FAIL)
                                 }
                                 else {

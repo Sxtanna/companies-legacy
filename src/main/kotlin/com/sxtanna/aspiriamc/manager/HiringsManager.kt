@@ -24,8 +24,8 @@ class HiringsManager(override val plugin: Companies) : Manager("Hiring") {
     override fun enable() {
         respondTime = plugin.configsManager.get(HIRINGS_RESPOND_TIME)
 
-        clear = repeat(20) {
-            if (cache.isEmpty()) return@repeat
+        clear = repeatAsync(20) {
+            if (cache.isEmpty()) return@repeatAsync
 
             val iter0 = cache.iterator()
 

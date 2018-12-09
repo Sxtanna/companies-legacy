@@ -17,7 +17,11 @@ interface CompanyDatabase : Named, PluginDependant {
 
     fun killCompany(uuid: UUID)
 
-    fun saveCompany(data: Company)
+    fun saveCompany(data: Company) {
+        saveCompany(data, true)
+    }
+
+    fun saveCompany(data: Company, async: Boolean)
 
 
     fun allCompanies(returnSync: Boolean = true, onRetrieve: (companies: List<Company>) -> Unit)

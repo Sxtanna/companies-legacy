@@ -89,15 +89,25 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
         }.execute()
     }
 
-    override fun saveCompany(data: Company) = accessDB {
-        insert(base.COMPANY, Update(
-                InDBCompany::name,
-                InDBCompany::icon,
-                InDBCompany::balance,
-                InDBCompany::account,
-                InDBCompany::staffer,
-                InDBCompany::product),
-                InDBCompany(data))
+    override fun saveCompany(data: Company, async: Boolean) {
+        fun insert() = sql {
+            insert(base.COMPANY, Update(
+                    InDBCompany::name,
+                    InDBCompany::icon,
+                    InDBCompany::balance,
+                    InDBCompany::account,
+                    InDBCompany::staffer,
+                    InDBCompany::product),
+                    InDBCompany(data))
+        }
+
+        if (async.not()) {
+            return insert()
+        }
+
+        GlobalScope.launch {
+            insert()
+        }
     }
 
 

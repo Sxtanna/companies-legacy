@@ -35,7 +35,7 @@ class LocalDatabase(override val plugin: Companies) : CompanyDatabase {
         companyStore.kill(uuid)
     }
 
-    override fun saveCompany(data: Company) {
+    override fun saveCompany(data: Company, async: Boolean) {
         companyStore.save(data)
     }
 

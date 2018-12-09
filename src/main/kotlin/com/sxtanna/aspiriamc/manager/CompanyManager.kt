@@ -42,7 +42,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
         plugin.database.allCompanies(true, ::push)
 
         repeatAsync((20 * 60) * 5) {
-            companies.forEach(plugin.database::saveCompany)
+            companies.forEach { plugin.database.saveCompany(it, false) }
         }
     }
 
@@ -267,7 +267,9 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
             //println("Loaded $sponsoredCompanies")
             //println("Cached $cached")
 
-            repeat(20 * 60) {
+            repeatAsync(20 * 60) {
+                if (cached.isEmpty()) return@repeatAsync
+
                 val iter = cached.iterator()
 
                 while (iter.hasNext()) {
