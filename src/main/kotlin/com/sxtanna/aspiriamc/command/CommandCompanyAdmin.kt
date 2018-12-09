@@ -16,8 +16,8 @@ class CommandCompanyAdmin(override val plugin: Companies)
     private val subCommands = mutableMapOf<String, CommandBase>()
 
     init {
-        register(CommandCompanyAdminFix())
         register(CommandCompanySave())
+        register(CommandCompanyAdminFix())
     }
 
 
@@ -91,6 +91,28 @@ class CommandCompanyAdmin(override val plugin: Companies)
     }
 
 
+    inner class CommandCompanySave : CommandBase {
+
+        override val name = "save"
+
+
+        override fun CommandContext.evaluate() {
+            async {
+                plugin.stafferManager.staffers.forEach(plugin.database::saveStaffer)
+                plugin.companyManager.companies.forEach(plugin.database::saveCompany)
+
+                sync {
+                    reply("&asuccessfully saved all staffers and companies")
+                }
+            }
+        }
+
+        override fun CommandContext.complete(): List<String> {
+            return emptyList()
+        }
+
+    }
+
     inner class CommandCompanyAdminFix : CommandBase {
 
         override val name = "fix"
@@ -132,31 +154,8 @@ class CommandCompanyAdmin(override val plugin: Companies)
                 }
                 else -> {
                     fail("does not need to be fixed")
-
                 }
             }
-        }
-
-    }
-
-    inner class CommandCompanySave : CommandBase {
-
-        override val name = "save"
-
-
-        override fun CommandContext.evaluate() {
-            async {
-                plugin.stafferManager.staffers.forEach(plugin.database::saveStaffer)
-                plugin.companyManager.companies.forEach(plugin.database::saveCompany)
-
-                sync {
-                    reply("&asuccessfully saved all staffers and companies")
-                }
-            }
-        }
-
-        override fun CommandContext.complete(): List<String> {
-            return emptyList()
         }
 
     }
