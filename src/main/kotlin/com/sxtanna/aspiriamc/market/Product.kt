@@ -61,7 +61,7 @@ class Product : Named, Identified<UUID>, Displayable {
                     name = itemStackName(item.data)
                 }
 
-                displayName = "${if (item.data.type.maxStackSize == 1) "&f$name" else "&a${item.data.amount} "}&f$name"
+                displayName = "${if (item.data.type.maxStackSize == 1) "" else "&a${item.data.amount} "}&f$name"
 
                 val loreLines = mutableListOf<String>()
 
