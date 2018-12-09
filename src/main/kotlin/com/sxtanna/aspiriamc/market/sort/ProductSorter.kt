@@ -7,13 +7,7 @@ sealed class ProductSorter : Comparator<Product> {
     object ByCost : ProductSorter() {
 
         override fun compare(o1: Product, o2: Product): Int {
-            val value = o1.cost.compareTo(o2.cost)
-            return if (value == 0) {
-                1
-            }
-            else {
-                value
-            }
+            return o1.cost.compareTo(o2.cost)
         }
 
     }
@@ -37,12 +31,18 @@ sealed class ProductSorter : Comparator<Product> {
     object ByStaffer : ProductSorter() {
 
         override fun compare(o1: Product, o2: Product): Int {
+            val uuid0 = o1.stafferUUID
+            val uuid1 = o2.stafferUUID
+
             return when {
-                o1.stafferUUID == o2.stafferUUID -> {
-                    1
+                uuid0 == null -> {
+                    -1
+                }
+                uuid1 == null -> {
+                    +1
                 }
                 else -> {
-                    2
+                    uuid0.compareTo(uuid1)
                 }
             }
         }
