@@ -764,7 +764,7 @@ class CommandCompany(override val plugin: Companies)
                         }
                     }
                     else -> {
-                        val name = input[0]
+                        val name = colorStrip(input.joinToString(" "))
                         val data = notNull(hirings.data.find { it.name.equals(name, true) }) {
                             "You aren't being hired by a company named '$name'"
                         }
