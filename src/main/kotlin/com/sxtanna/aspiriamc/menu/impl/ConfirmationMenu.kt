@@ -34,18 +34,16 @@ abstract class ConfirmationMenu(prompt: String) : Menu(prompt, R_3) {
 
     override fun build() {
 
+        val lineItem = buildItemStack(WHITE_STAINED_GLASS_PANE) {
+            displayName = " "
+        }
         val passItem = buildItemStack(LIME_STAINED_GLASS_PANE) {
             displayName = passName()
             lore = passLore()
         }
-
         val failItem = buildItemStack(RED_STAINED_GLASS_PANE) {
             displayName = failName()
             lore = failLore()
-        }
-
-        val lineItem = buildItemStack(WHITE_STAINED_GLASS_PANE) {
-            displayName = " "
         }
 
 
@@ -61,7 +59,8 @@ abstract class ConfirmationMenu(prompt: String) : Menu(prompt, R_3) {
         this[Col.C_8, failItem] = failFunc
         this[Col.C_9, failItem] = failFunc
 
-        this[Row.R_2, lineItem] =  {}
+        this[Row.R_2, lineItem] = {}
+
     }
 
 }

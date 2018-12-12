@@ -1,6 +1,6 @@
 package com.sxtanna.aspiriamc.store
 
-import com.sxtanna.aspiriamc.base.Identified
+import com.sxtanna.aspiriamc.base.Unique
 import com.sxtanna.aspiriamc.exts.ensureUsable
 import com.sxtanna.aspiriamc.store.base.Store
 import com.sxtanna.korm.Korm
@@ -10,7 +10,7 @@ import com.sxtanna.korm.writer.base.Options.LIST_ENTRY_ON_NEW_LINE
 import java.io.File
 import kotlin.reflect.KClass
 
-open class FileStore<T : Identified<I>, I : Any>(private val folder: File, private val clazz: KClass<T>) : Store<T, I> {
+open class FileStore<T : Unique<I>, I : Any>(private val folder: File, private val clazz: KClass<T>) : Store<T, I> {
 
     private val korm = Korm(writer = KormWriter(2, Options.min(LIST_ENTRY_ON_NEW_LINE)))
 
@@ -22,8 +22,7 @@ open class FileStore<T : Identified<I>, I : Any>(private val folder: File, priva
     override fun load(uuid: I): T? {
         return try {
             korm.pull(getFileForData(uuid, false)).to(clazz)
-        }
-        catch (ignored: Exception) {
+        } catch (ignored: Exception) {
             null
         }
     }
@@ -38,8 +37,7 @@ open class FileStore<T : Identified<I>, I : Any>(private val folder: File, priva
         return folder.listFiles().filter { it.isFile }.filter { it.extension.equals("korm", true) }.mapNotNull {
             try {
                 korm.pull(it).to(clazz)
-            }
-            catch (ignored: Exception) {
+            } catch (ignored: Exception) {
                 null
             }
         }
@@ -50,7 +48,7 @@ open class FileStore<T : Identified<I>, I : Any>(private val folder: File, priva
         val file = folder.resolve("$uuid.korm")
 
         if (createIfNotFound) {
-            ensureUsable(file)
+            file.ensureUsable()
         }
 
         return file

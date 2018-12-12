@@ -46,7 +46,6 @@ class CommandCompany(override val plugin: Companies)
 
         register(CommandCompanyHelp())
 
-
         register(CommandCompanyAdmin())
         register(CommandCompanyItems())
 
@@ -64,7 +63,8 @@ class CommandCompany(override val plugin: Companies)
 
     override fun CommandContext.evaluate() {
         val targetText = input.getOrNull(0) ?: return openCompanyMenu()
-        val targetBase = subCommands[targetText.toLowerCase()] ?: return reply("&cSub-Command &7$targetText&c doesn't exist")
+        val targetBase = subCommands[targetText.toLowerCase()]
+                ?: return reply("&cSub-Command &7$targetText&c doesn't exist")
 
         if (sender.hasPermission(targetBase.perm).not()) {
             return reply("&cYou don't have permission to use this command")
@@ -105,8 +105,7 @@ class CommandCompany(override val plugin: Companies)
     private fun CommandContext.openCompanyMenu() {
         val player = getAsPlayer ?: return reply("You must be a player to open the company shop")
 
-        val menu = GlobalCompanyMarketMenu(plugin)
-        menu.open(player)
+        GlobalCompanyMarketMenu(plugin).open(player)
     }
 
     private fun register(commandBase: CommandBase) {
@@ -118,11 +117,11 @@ class CommandCompany(override val plugin: Companies)
 
         if (file.exists().not()) {
             val data = subCommands.keys.associateWith { "default description" }
-            korm.push(data, ensureUsable(file))
+            plugin.korm.push(data, file.ensureUsable())
         }
 
         val data = try {
-            korm.pull(file).toHash<String, String>().mapKeys { it.key.toLowerCase() }.filter { it.value.isNotBlank() }
+            plugin.korm.pull(file).toHash<String, String>().mapKeys { it.key.toLowerCase() }.filter { it.value.isNotBlank() }
         } catch (ex: Exception) {
             emptyMap<String, String>()
         }
@@ -141,15 +140,11 @@ class CommandCompany(override val plugin: Companies)
         return hirings
     }
 
-    private fun CommandContext.quickAccessCompanyStaffers(includeOwner: Boolean = false): List<String> {
-        val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList())
-                ?: return emptyList()
+    private fun CommandContext.quickAccessCompanyStaffers(): List<String> {
+        val staffer = getAsPlayer?.uniqueId ?: return emptyList()
+        val company = plugin.quickAccessCompany(staffer) ?: return emptyList()
 
-        return if (includeOwner) {
-            company.staffer
-        } else {
-            company.staffer.filterNot { it == sender.uniqueId }
-        }.map(plugin.stafferManager.names::get).filterApplicable(0)
+        return company.staffer.map(plugin.stafferManager.names::get)
     }
 
 
@@ -171,6 +166,7 @@ class CommandCompany(override val plugin: Companies)
         }
     }
 
+    @Suppress("unused") // used to  restrict caller
     private inline fun CommandContext.retrieveStafferByUUID(playerUUID: UUID, crossinline block: (staffer: Staffer) -> Unit) {
         val stafferResult = plugin.stafferManager.get(playerUUID) { data, _ ->
             block.invoke(data)
@@ -208,8 +204,7 @@ class CommandCompany(override val plugin: Companies)
                 notNull(it) {
                     "your company doesn't exist"
                 }
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 return@get reportException(ex)
             }
 
@@ -220,24 +215,12 @@ class CommandCompany(override val plugin: Companies)
             is Some -> {
                 block.invoke(companyResult.data)
             }
-            is None -> {
-
+            is None -> { /* it's loading, or there's an error */
             }
         }
     }
 
-    private fun CommandContext.retrieveIsOwner(): Boolean {
-        val stafferUUID = getAsPlayer?.uniqueId ?: return false
-        return plugin.quickAccessCompany(stafferUUID)?.isOwner(stafferUUID) ?: false
-    }
 
-    private fun CommandContext.retrieveInCompany(): Boolean {
-        val stafferUUID = getAsPlayer?.uniqueId ?: return false
-        return plugin.quickAccessCompany(stafferUUID) != null
-    }
-
-
-    // [DONE]
     inner class CommandCompanyHelp : CommandBase {
 
         override val name = "help"
@@ -247,7 +230,7 @@ class CommandCompany(override val plugin: Companies)
             val pages = processPagination()
 
             var index = 0
-            val reply = when(pages.size > 1) {
+            val reply = when (pages.size > 1) {
                 true -> {
                     val page = input.getOrNull(0)?.let {
                         notNull(it.toIntOrNull()) {
@@ -271,7 +254,7 @@ class CommandCompany(override val plugin: Companies)
 
         override fun CommandContext.complete(): List<String> {
             val pages = processPagination()
-            return when(input.size) {
+            return when (input.size) {
                 0, 1 -> {
                     (0..pages.lastIndex).map { "${it + 1}" }
                 }
@@ -283,14 +266,15 @@ class CommandCompany(override val plugin: Companies)
 
 
         private fun CommandContext.processPagination(): List<List<String>> {
-            return subCommands.filterValues { it.show && it.name in subMessages && runnable() }.values.map {
+            return subCommands.filterValues {
+                it.show && it.name in subMessages && runnable()
+            }.values.map {
                 "&f/company &a${it.name}&r\n    &7${subMessages.getOrDefault(it.name, "no description")}"
             }.chunked(3)
         }
 
     }
 
-    // [DONE]
     inner class CommandCompanyTax : CommandBase {
 
         override val name = "tax"
@@ -326,7 +310,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanyTop : CommandBase {
 
         override val name = "top"
@@ -351,7 +334,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanyAdmin : CommandBase {
 
         override val name = "admin"
@@ -381,7 +363,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanyItems : CommandBase {
 
         override val name = "items"
@@ -406,7 +387,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanyCreate : CommandBase {
 
         override val name = "create"
@@ -431,7 +411,8 @@ class CommandCompany(override val plugin: Companies)
                 return reply("failed to create company: you have voided items to claim")
             }
 
-            val inputName = colorStrip(input.joinToString(" ").takeIf { it.isNotBlank() } ?: return reply("you must define the name of the company!"))
+            val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() }
+                    ?: return reply("you must define the name of the company!"))
             val createFee = plugin.companyManager.createFee
 
 
@@ -481,7 +462,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanyRename : CommandBase {
 
         override val name = "rename"
@@ -504,7 +484,8 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("you must be the owner of the company to change the name")
                 }
 
-                val inputName = colorStrip(input.joinToString(" ").takeIf { it.isNotBlank() } ?: return@retrieveCompany reply("you must define the new name!"))
+                val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() }
+                        ?: return@retrieveCompany reply("you must define the new name!"))
                 val renameFee = plugin.companyManager.renameFee
 
                 val max = plugin.configsManager.get(COMPANY_COMMAND_NAME_MAX)
@@ -531,7 +512,7 @@ class CommandCompany(override val plugin: Companies)
 
 
                     override fun onPass(action: MenuAction) {
-                        when(val result = plugin.companyManager.attemptRename(company, inputName, player)) {
+                        when (val result = plugin.companyManager.attemptRename(company, inputName, player)) {
                             is Some -> {
                                 reply("successfully renamed your company to $inputName")
 
@@ -560,8 +541,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-
-    // [DONE]
     inner class CommandCompanyHire : CommandBase {
 
         override val name = "hire"
@@ -574,7 +553,8 @@ class CommandCompany(override val plugin: Companies)
         }
 
         override fun CommandContext.complete(): List<String> {
-            val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList()) ?: return emptyList()
+            val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList())
+                    ?: return emptyList()
             return onlinePlayers.filterNot(company::contains).map(Player::getName).filterApplicable(0)
         }
 
@@ -623,7 +603,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanyFire : CommandBase {
 
         override val name = "fire"
@@ -636,7 +615,8 @@ class CommandCompany(override val plugin: Companies)
         }
 
         override fun CommandContext.complete(): List<String> {
-            val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList()) ?: return emptyList()
+            val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList())
+                    ?: return emptyList()
             return company.staffer.filterNot { it == sender.uniqueId }.map(plugin.stafferManager.names::get).filterApplicable(0)
         }
 
@@ -717,8 +697,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-
-    // [DONE]
     inner class CommandCompanyJoin : CommandBase {
 
         override val name = "join"
@@ -764,7 +742,7 @@ class CommandCompany(override val plugin: Companies)
                         }
                     }
                     else -> {
-                        val name = colorStrip(input.joinToString(" "))
+                        val name = strip(input.joinToString(" "))
                         val data = notNull(hirings.data.find { it.name.equals(name, true) }) {
                             "You aren't being hired by a company named '$name'"
                         }
@@ -780,7 +758,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanyDeny : CommandBase {
 
         override val name = "deny"
@@ -838,8 +815,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-
-    // [DONE]
     inner class CommandCompanyGive : CommandBase {
 
         override val name = "give"
@@ -890,8 +865,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-
-    // [DONE]
     inner class CommandCompanyPayout : CommandBase {
 
         override val name = "payout"
@@ -905,9 +878,12 @@ class CommandCompany(override val plugin: Companies)
         }
 
         override fun CommandContext.complete(): List<String> {
-            return when(input.size){
+            return when (input.size) {
                 0 -> {
-                    quickAccessCompanyStaffers(includeOwner = true)
+                    quickAccessCompanyStaffers()
+                }
+                1 -> {
+                    quickAccessCompanyStaffers().filterApplicable(0)
                 }
                 else -> {
                     emptyList()
@@ -951,8 +927,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-
-    // [DONE]
     inner class CommandCompanyClose : CommandBase {
 
         override val name = "close"
@@ -1002,8 +976,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-
-    // [DONE]
     inner class CommandCompanyIcon : CommandBase {
 
         override val name = "icon"
@@ -1026,9 +998,10 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("you must be the owner of the company to change the icon")
                 }
 
-                val item = player.inventory.itemInMainHand ?: return@retrieveCompany reply("you must be holding the item you want to use")
+                val item = player.inventory.itemInMainHand
+                        ?: return@retrieveCompany reply("you must be holding the item you want to use")
 
-                when (val result = plugin.vaultHook.attemptTake(player, plugin.marketsManager.iconFee)) {
+                when (val result = plugin.economyHook.attemptTake(player, plugin.marketsManager.iconFee)) {
                     is Some -> {
                         company.icon = item.type
                         reply("successfully changed your company's icon to: ${item.type.properName()}")
@@ -1046,7 +1019,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanySell : CommandBase {
 
         override val name = "sell"
@@ -1089,7 +1061,6 @@ class CommandCompany(override val plugin: Companies)
 
     }
 
-    // [DONE]
     inner class CommandCompanySponsor : CommandBase {
 
         override val name = "sponsor"

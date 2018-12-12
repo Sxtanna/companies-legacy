@@ -10,8 +10,8 @@ import org.bukkit.event.player.PlayerQuitEvent
 
 class ListensManager(override val plugin: Companies) : Manager("Listeners"), Listener {
 
-    private val onPlayerJoin = mutableListOf<PlayerJoinEvent.() -> Unit>()
-    private val onPlayerQuit = mutableListOf<PlayerQuitEvent.() -> Unit>()
+    private val onPlayerJoin = mutableListOf<(PlayerJoinEvent) -> Unit>()
+    private val onPlayerQuit = mutableListOf<(PlayerQuitEvent) -> Unit>()
 
 
     override fun enable() {
@@ -20,6 +20,9 @@ class ListensManager(override val plugin: Companies) : Manager("Listeners"), Lis
 
     override fun disable() {
         HandlerList.unregisterAll(this)
+
+        onPlayerJoin.clear()
+        onPlayerQuit.clear()
     }
 
 
@@ -33,13 +36,13 @@ class ListensManager(override val plugin: Companies) : Manager("Listeners"), Lis
 
 
     @EventHandler
-    private fun PlayerJoinEvent.onJoin() {
-        onPlayerJoin.forEach { it.invoke(this) }
+    private fun PlayerJoinEvent.onJoin() = onPlayerJoin.forEach {
+        it.invoke(this)
     }
 
     @EventHandler
-    private fun PlayerQuitEvent.onQuit() {
-        onPlayerQuit.forEach { it.invoke(this) }
+    private fun PlayerQuitEvent.onQuit() = onPlayerQuit.forEach {
+        it.invoke(this)
     }
 
 }

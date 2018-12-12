@@ -39,17 +39,17 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
         sponsorManager.enable()
 
-        plugin.database.allCompanies(true, ::push)
+        plugin.companyDatabase.allCompanies(true, ::push)
 
         repeatAsync((20 * 60) * 5) {
-            companies.forEach { plugin.database.saveCompany(it, false) }
+            companies.forEach { plugin.companyDatabase.saveCompany(it, false) }
         }
     }
 
     override fun disable() {
         sponsorManager.disable()
 
-        cache.values.forEach(plugin.database::saveCompany)
+        cache.values.forEach(plugin.companyDatabase::saveCompany)
         cache.clear()
     }
 
@@ -85,7 +85,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
         cache.remove(company.uuid)
         cache.remove(company.name.toLowerCase())
 
-        plugin.database.killCompany(company.uuid)
+        plugin.companyDatabase.killCompany(company.uuid)
 
 
         fun fireStaffer(staffer: Staffer) {
@@ -103,7 +103,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
                 staffer.companyUUID = null
             }
 
-            plugin.database.saveStaffer(staffer)
+            plugin.companyDatabase.saveStaffer(staffer)
         }
 
 
@@ -129,14 +129,9 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
         }
 
         when (val existed = get(name)) {
-            null -> when (val result = plugin.vaultHook.attemptTake(player, createFee)) {
-                is Some -> when (result.data.transactionSuccess()) {
-                    true -> {
-                        Company(name).apply(::push)
-                    }
-                    else -> {
-                        fail(result.data.errorMessage)
-                    }
+            null -> when (val result = plugin.economyHook.attemptTake(player, createFee)) {
+                is Some -> {
+                    Company(name).apply(::push)
                 }
                 is None -> {
                     result.rethrow()
@@ -155,14 +150,9 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
             fail("company name $name is too long, must be at most $max")
         }
 
-        when(val purchase = plugin.vaultHook.attemptTake(player, renameFee)) {
-            is Some -> when(purchase.data.transactionSuccess()) {
-                true -> {
-                    company.name = name
-                }
-                else -> {
-                    fail(purchase.data.errorMessage)
-                }
+        when (val purchase = plugin.economyHook.attemptTake(player, renameFee)) {
+            is Some -> {
+                company.name = name
             }
             is None -> {
                 purchase.rethrow()
@@ -172,7 +162,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
 
     private fun load(uuid: UUID, whenLoaded: (Company?) -> Unit = { }) {
-        plugin.database.loadCompany(uuid) {
+        plugin.companyDatabase.loadCompany(uuid) {
             if (it != null) {
                 push(it)
             }
@@ -190,7 +180,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
             cache[uuid]
         }
 
-        plugin.database.saveCompany(data ?: return)
+        plugin.companyDatabase.saveCompany(data ?: return)
     }
 
     private fun push(data: Company) {
@@ -257,7 +247,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
             slotCost = plugin.configsManager.get(SPONSOR_SLOT_COST)
 
             val sponsoredCompanies = try {
-                plugin.korm().pull(File(pluginFolder, "sponsored-companies.korm")).toHashRef<UUID, Long>()
+                plugin.korm.pull(File(pluginFolder, "sponsored-companies.korm")).toHashRef<UUID, Long>()
             } catch (ignored: Exception) {
                 emptyMap<UUID, Long>()
             }
@@ -283,21 +273,15 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
         }
 
         override fun disable() {
-            plugin.korm().push(cached, ensureUsable(File(pluginFolder, "sponsored-companies.korm")))
+            plugin.korm.push(cached, pluginFolder.resolve("sponsored-companies.korm").ensureUsable())
         }
 
 
         fun attemptPurchaseSponsorship(company: Company, player: Player) = of {
             when (val existed = cached[company.uuid]) {
-                null -> when (val result = plugin.vaultHook.attemptTake(player, slotCost)) {
-                    is Some -> when (result.data.transactionSuccess()) {
-                        true -> {
-                            cached[company.uuid] = currentTimeMillis()
-                            Unit
-                        }
-                        else -> {
-                            fail("failed to purchase sponsor slot: ${result.data.errorMessage}")
-                        }
+                null -> when (val result = plugin.economyHook.attemptTake(player, slotCost)) {
+                    is Some -> {
+                        cached[company.uuid] = currentTimeMillis()
                     }
                     is None -> {
                         result.rethrow()

@@ -2,8 +2,8 @@ package com.sxtanna.aspiriamc.base
 
 import org.bukkit.inventory.ItemStack
 
-interface Displayable {
+interface Iconable {
 
-    fun createDisplayIcon(): ItemStack
+    fun createIcon(): ItemStack
 
 }

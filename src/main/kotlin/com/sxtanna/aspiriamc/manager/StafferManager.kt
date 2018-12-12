@@ -36,8 +36,10 @@ class StafferManager(override val plugin: Companies) : Manager("Staffers") {
     }
 
     override fun disable() {
-        cache.values.forEach { plugin.database.saveStaffer(it) }
+        cache.values.forEach { plugin.companyDatabase.saveStaffer(it) }
         cache.clear()
+
+        names.cache.clear()
     }
 
 
@@ -51,8 +53,7 @@ class StafferManager(override val plugin: Companies) : Manager("Staffers") {
 
             if (existed != null) {
                 existed
-            }
-            else {
+            } else {
                 load(uuid, whenLoaded)
                 fail("loading staffer account")
             }
@@ -61,7 +62,7 @@ class StafferManager(override val plugin: Companies) : Manager("Staffers") {
 
 
     private fun load(uuid: UUID, whenLoaded: (data: Staffer, type: AccountType) -> Unit = { _, _ -> }) {
-        plugin.database.loadStaffer(uuid) {
+        plugin.companyDatabase.loadStaffer(uuid) {
             val data = it ?: Staffer(uuid)
 
             cache[data.uuid] = data
@@ -86,12 +87,11 @@ class StafferManager(override val plugin: Companies) : Manager("Staffers") {
     private fun save(uuid: UUID, remove: Boolean = false) {
         val data = if (remove) {
             cache.remove(uuid)
-        }
-        else {
+        } else {
             cache[uuid]
         }
 
-        plugin.database.saveStaffer(data ?: return)
+        plugin.companyDatabase.saveStaffer(data ?: return)
 
         val company = plugin.companyManager.cache[uuid] ?: return
 
@@ -112,8 +112,8 @@ class StafferManager(override val plugin: Companies) : Manager("Staffers") {
             return plugin.server.getPlayer(uuid)?.name ?: cache[uuid] ?: load(uuid) ?: "null"
         }
 
-        operator fun set(uuid: UUID, name: String)  {
-            val file = ensureUsable(pluginFolder.resolve("name-cache").resolve("$uuid.dat"))
+        operator fun set(uuid: UUID, name: String) {
+            val file = pluginFolder.resolve("name-cache").resolve("$uuid.dat").ensureUsable()
             file.writeText(name)
 
             cache[uuid] = name

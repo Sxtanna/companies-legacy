@@ -44,7 +44,6 @@ interface PluginDependant {
         get() = pluginFolder.parentFile.parentFile
 
 
-
     fun findPlayerByUUID(uuid: UUID): Player? {
         return server.getPlayer(uuid)
     }

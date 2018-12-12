@@ -4,11 +4,10 @@ import com.sxtanna.aspiriamc.Companies
 import com.sxtanna.aspiriamc.base.PluginDependant
 import com.sxtanna.aspiriamc.base.Result
 import net.milkbowl.vault.economy.Economy
-import net.milkbowl.vault.economy.EconomyResponse
 import org.bukkit.OfflinePlayer
 import java.util.*
 
-class VaultHook(override val plugin: Companies) : PluginDependant {
+class EconomyHook(override val plugin: Companies) : PluginDependant {
 
     private var economy: Economy? = null
 
@@ -25,20 +24,28 @@ class VaultHook(override val plugin: Companies) : PluginDependant {
     }
 
 
-    fun attemptTake(player: OfflinePlayer, cost: Double): Result<EconomyResponse> = Result.of {
-        checkNotNull(economy?.withdrawPlayer(player, cost)) {
+    fun attemptTake(player: OfflinePlayer, cost: Double): Result<Unit> = Result.of {
+        val response = checkNotNull(economy?.withdrawPlayer(player, cost)) {
             "economy unavailable"
+        }
+
+        if (response.transactionSuccess().not()) {
+            fail(response.errorMessage)
         }
     }
 
-    fun attemptGive(player: OfflinePlayer, cost: Double): Result<EconomyResponse> = Result.of {
-        checkNotNull(economy?.depositPlayer(player, cost)) {
+    fun attemptGive(player: OfflinePlayer, cost: Double): Result<Unit> = Result.of {
+        val response = checkNotNull(economy?.depositPlayer(player, cost)) {
             "economy unavailable"
+        }
+
+        if (response.transactionSuccess().not()) {
+            fail(response.errorMessage)
         }
     }
 
 
-    fun attemptGive(uuid: UUID, cost: Double): Result<EconomyResponse> {
+    fun attemptGive(uuid: UUID, cost: Double): Result<Unit> {
         val player = plugin.server.getPlayer(uuid) ?: plugin.server.getOfflinePlayer(uuid)
         return attemptGive(player, cost)
     }

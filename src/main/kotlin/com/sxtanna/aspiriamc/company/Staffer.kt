@@ -1,10 +1,10 @@
 package com.sxtanna.aspiriamc.company
 
-import com.sxtanna.aspiriamc.base.Identified
+import com.sxtanna.aspiriamc.base.Unique
 import java.util.*
 
-class Staffer() : Identified<UUID> {
-    constructor(uuid: UUID): this() {
+class Staffer() : Unique<UUID> {
+    constructor(uuid: UUID) : this() {
         this.uuid = uuid
     }
 
@@ -17,7 +17,7 @@ class Staffer() : Identified<UUID> {
 
 
     internal fun updateData(uuid: UUID, companyUUID: UUID?, voidedItems: List<String>): Staffer {
-        this.uuid =  uuid
+        this.uuid = uuid
         this.companyUUID = companyUUID
         this.voidedItems += voidedItems
 

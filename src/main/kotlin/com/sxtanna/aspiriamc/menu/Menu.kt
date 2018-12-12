@@ -5,7 +5,7 @@ import com.sxtanna.aspiriamc.config.Garnish.MENU_BUTTON_BACK
 import com.sxtanna.aspiriamc.exts.BACK
 import com.sxtanna.aspiriamc.exts.PREF
 import com.sxtanna.aspiriamc.exts.buildItemStack
-import com.sxtanna.aspiriamc.exts.colorFormat
+import com.sxtanna.aspiriamc.exts.color
 import com.sxtanna.aspiriamc.menu.Menu.ButtonToggleState.GREYED
 import com.sxtanna.aspiriamc.menu.Menu.ButtonToggleState.REMOVE
 import com.sxtanna.aspiriamc.menu.base.Col
@@ -21,7 +21,7 @@ import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-abstract class Menu(val title: String, val rows: Row) : InventoryHolder {
+abstract class Menu(title: String, private val rows: Row) : InventoryHolder {
 
     protected open val cache = false
     protected open val prevCache = mutableMapOf<UUID, Menu>()
@@ -149,7 +149,7 @@ abstract class Menu(val title: String, val rows: Row) : InventoryHolder {
     data class MenuAction(val who: Player, val how: ClickType, val what: ItemStack) {
 
         fun reply(msg: String) {
-            who.sendMessage(colorFormat("$PREF $msg"))
+            who.sendMessage(color("$PREF $msg"))
         }
 
     }

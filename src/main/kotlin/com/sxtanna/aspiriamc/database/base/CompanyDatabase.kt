@@ -13,15 +13,15 @@ interface CompanyDatabase : Named, PluginDependant {
     fun kill()
 
 
-    fun loadCompany(uuid: UUID, returnSync: Boolean = true, onLoad: (company: Company?) -> Unit)
-
-    fun killCompany(uuid: UUID)
-
     fun saveCompany(data: Company) {
         saveCompany(data, true)
     }
 
     fun saveCompany(data: Company, async: Boolean)
+
+    fun loadCompany(uuid: UUID, returnSync: Boolean = true, onLoad: (company: Company?) -> Unit)
+
+    fun killCompany(uuid: UUID)
 
 
     fun allCompanies(returnSync: Boolean = true, onRetrieve: (companies: List<Company>) -> Unit)
@@ -29,8 +29,8 @@ interface CompanyDatabase : Named, PluginDependant {
     fun topCompanies(returnSync: Boolean = true, onRetrieve: (companies: List<Company>) -> Unit)
 
 
-    fun loadStaffer(uuid: UUID, returnSync: Boolean = true, onLoad: (staffer: Staffer?) -> Unit)
-
     fun saveStaffer(data: Staffer)
+
+    fun loadStaffer(uuid: UUID, returnSync: Boolean = true, onLoad: (staffer: Staffer?) -> Unit)
 
 }

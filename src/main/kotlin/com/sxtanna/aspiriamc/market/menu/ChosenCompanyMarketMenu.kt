@@ -8,6 +8,7 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.config.Garnish.MARKET_PRODUCT_PURCHASE_FAIL
 import com.sxtanna.aspiriamc.config.Garnish.MARKET_PRODUCT_PURCHASE_PASS
 import com.sxtanna.aspiriamc.exts.base64ToItemStack
+import com.sxtanna.aspiriamc.exts.inventoryCanHold
 import com.sxtanna.aspiriamc.exts.itemStackName
 import com.sxtanna.aspiriamc.market.Product
 import com.sxtanna.aspiriamc.market.sort.ProductSorter
@@ -30,9 +31,9 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
         pagination.page().sortedWith(ProductSorter.ByCost).forEach {
             val (row, col) = slotToGrid(itemSlots.nextInt())
 
-            val icon = it.createDisplayIcon()
+            val icon = it.createIcon()
 
-            this[row, col, icon] = out@ {
+            this[row, col, icon] = out@{
 
                 if (it.stafferUUID == who.uniqueId) {
                     return@out reply("&cfailed to purchase product: you cannot purchase your own products")
@@ -40,41 +41,44 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
                 val confirmation = object : ConfirmationMenu("Cost: &a$${it.cost}") {
 
-
                     override fun passLore(): List<String> {
                         return listOf(
                                 "",
                                 "&7Buy &a${icon.itemMeta.displayName} &7for &a$${it.cost}"
-                        )
+                                     )
                     }
 
                     override fun failLore(): List<String> {
                         return listOf(
                                 "",
                                 "&7Stop buying item"
-                        )
+                                     )
                     }
 
 
                     override fun onPass(action: MenuAction) {
-                        when(val item = attemptPurchaseProduct(it, who).with { base64ToItemStack(it.base) }) {
+                        when (val item = attemptPurchaseProduct(it, who).with { base64ToItemStack(it.base) }) {
                             is Some -> {
-                                if (who.inventory.addItem(item.data).isNotEmpty()) {
-                                    reply("&cyour inventory is full")
-
-                                    plugin.vaultHook.attemptGive(who.uniqueId, it.cost)
-
-                                    plugin.garnishManager.send(who, MARKET_PRODUCT_PURCHASE_FAIL)
-                                }
-                                else {
+                                if (who.inventoryCanHold(item.data)) {
+                                    who.inventory.addItem(item.data)
                                     company.product -= it
-
-                                    reply("&fsuccessfully purchased &e${if (item.data.type.maxStackSize == 1) "" else "${item.data.amount} "}${itemStackName(item.data)}&r for &a$${it.cost}")
 
                                     plugin.reportsManager.reportPurchase(it)
                                     plugin.garnishManager.send(who, MARKET_PRODUCT_PURCHASE_PASS)
 
                                     refreshInstances(company)
+
+                                    this@ChosenCompanyMarketMenu.fresh()
+                                    this@ChosenCompanyMarketMenu.open(action.who)
+
+                                    reply("&fsuccessfully purchased &e${if (item.data.type.maxStackSize == 1) "" else "${item.data.amount} "}${itemStackName(item.data)}&r for &a$${it.cost}")
+                                    return
+                                } else {
+                                    plugin.economyHook.attemptGive(who.uniqueId, it.cost)
+
+                                    plugin.garnishManager.send(who, MARKET_PRODUCT_PURCHASE_FAIL)
+
+                                    reply("&cfailed to purchase product: your inventory is full")
                                 }
                             }
                             is None -> {
@@ -84,8 +88,7 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                             }
                         }
 
-                        this@ChosenCompanyMarketMenu.fresh()
-                        this@ChosenCompanyMarketMenu.open(action.who)
+                        action.who.closeInventory()
                     }
 
                     override fun onFail(action: MenuAction) {
@@ -122,19 +125,14 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
 
     private fun companyProducts(): List<List<Product>> {
-        return company.product.sortedWith(ProductSorter.ByDate).chunked(45).takeIf { it.isNotEmpty() } ?: listOf(emptyList())
+        return company.product.sortedWith(ProductSorter.ByDate).chunked(45).takeIf { it.isNotEmpty() }
+            ?: listOf(emptyList())
     }
 
 
     private fun attemptPurchaseProduct(product: Product, player: Player): Result<Unit> = Result.of {
-        when (val response = plugin.vaultHook.attemptTake(player, product.cost)) {
-            is Some -> when (response.data.transactionSuccess()) {
-                true -> {
-
-                }
-                else -> {
-                    fail(response.data.errorMessage)
-                }
+        when (val response = plugin.economyHook.attemptTake(player, product.cost)) {
+            is Some -> { /* do nothing, handled elsewhere */
             }
             is None -> {
                 response.rethrow()

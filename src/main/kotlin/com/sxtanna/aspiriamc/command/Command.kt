@@ -7,13 +7,13 @@ import com.sxtanna.aspiriamc.exts.BukkitCommand
 import org.bukkit.command.CommandSender
 
 abstract class Command(final override val name: String, final override val aliases: List<String> = emptyList()) : CommandBase, PluginDependant {
-    constructor(name: String, vararg aliases: String): this(name, aliases.toList())
+    constructor(name: String, vararg aliases: String) : this(name, aliases.toList())
 
     private lateinit var bukkitCommand: BukkitCommand
 
 
     internal fun CommandContext.reportException(ex: Exception) {
-        when(ex) {
+        when (ex) {
             is CommandException -> with(this) {
                 reply(ex.reason)
             }
@@ -32,13 +32,13 @@ abstract class Command(final override val name: String, final override val alias
             bukkitCommand = this
         }
 
+
         override fun execute(sender: CommandSender, alias: String, args: Array<out String>): Boolean {
             val context = CommandContext(sender, alias, args.toList())
 
             try {
                 context.evaluate()
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 context.reportException(ex)
             }
 
@@ -49,8 +49,7 @@ abstract class Command(final override val name: String, final override val alias
             try {
                 val context = CommandContext(sender, alias, args.toList())
                 return context.complete().toMutableList()
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 logger.severe("Failed to complete command: $name for ${sender.name} :")
                 ex.printStackTrace()
             }
@@ -58,16 +57,8 @@ abstract class Command(final override val name: String, final override val alias
             return mutableListOf()
         }
 
-
-        override fun testPermission(target: CommandSender?): Boolean {
-            return super.testPermission(target)
-        }
-
-        override fun testPermissionSilent(target: CommandSender?): Boolean {
-            return super.testPermissionSilent(target)
-        }
-
     }
+
 
     @PublishedApi
     internal class CommandException(val reason: String) : IllegalStateException(reason)

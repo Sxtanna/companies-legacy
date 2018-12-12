@@ -6,6 +6,7 @@ import com.sxtanna.aspiriamc.base.Result.Some
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.config.Garnish.MENU_BUTTON_CLICK
 import com.sxtanna.aspiriamc.exts.base64ToItemStack
+import com.sxtanna.aspiriamc.exts.inventoryCanHold
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
@@ -31,11 +32,11 @@ class CompanyVoidsMenu(val plugin: Companies, val staffer: Staffer, val prevMenu
             this[row, col, item] = out@{
                 plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
 
-                if (who.inventory.addItem(item).isNotEmpty()) {
-                    reply("&cyour inventory is full")
-                } else {
+                if (who.inventoryCanHold(item)) {
                     staffer.voidedItems -= it
                     fresh()
+                } else {
+                    reply("&cfailed to reclaim item: your inventory is full")
                 }
             }
         }

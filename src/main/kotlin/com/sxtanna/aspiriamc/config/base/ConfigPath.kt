@@ -4,7 +4,7 @@ import org.bukkit.configuration.ConfigurationSection
 
 interface ConfigPath<T : Any?> {
 
-    val pathString: String
+    val path: String
 
 
     fun value(yaml: ConfigurationSection): T

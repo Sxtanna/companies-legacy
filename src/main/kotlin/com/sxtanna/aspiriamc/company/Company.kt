@@ -1,11 +1,11 @@
 package com.sxtanna.aspiriamc.company
 
 import com.sxtanna.aspiriamc.Companies
-import com.sxtanna.aspiriamc.base.Displayable
-import com.sxtanna.aspiriamc.base.Identified
+import com.sxtanna.aspiriamc.base.Iconable
 import com.sxtanna.aspiriamc.base.Named
 import com.sxtanna.aspiriamc.base.Result
 import com.sxtanna.aspiriamc.base.Result.*
+import com.sxtanna.aspiriamc.base.Unique
 import com.sxtanna.aspiriamc.company.Company.Finance.Account
 import com.sxtanna.aspiriamc.config.Configs.DISPLAY_DEF_ICON
 import com.sxtanna.aspiriamc.config.Configs.PAYOUTS_DEF_RATIO
@@ -21,7 +21,7 @@ import org.bukkit.inventory.ItemFlag.HIDE_ATTRIBUTES
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Company() : Named, Identified<UUID>, Displayable {
+class Company() : Named, Unique<UUID>, Iconable {
     constructor(name: String) : this() {
         this.name = name
     }
@@ -43,12 +43,14 @@ class Company() : Named, Identified<UUID>, Displayable {
     internal lateinit var plugin: Companies
 
 
-    override fun createDisplayIcon(): ItemStack {
+    override fun createIcon(): ItemStack {
         val type = when (icon) {
             AIR -> {
                 plugin.configsManager.get(DISPLAY_DEF_ICON)
             }
-            else -> icon
+            else -> {
+                icon
+            }
         }
 
         return buildItemStack(type) {
@@ -60,7 +62,7 @@ class Company() : Named, Identified<UUID>, Displayable {
                     "",
                     "&7Employees: &a${staffer.size}",
                     "&7Items for sale: &a${product.size}"
-            )
+                         )
         }
     }
 
@@ -110,7 +112,6 @@ class Company() : Named, Identified<UUID>, Displayable {
     fun onlineStaffers(): List<Player> {
         return staffer.mapNotNull(Bukkit::getPlayer)
     }
-
 
 
     internal fun resetData(staffer: Staffer) {

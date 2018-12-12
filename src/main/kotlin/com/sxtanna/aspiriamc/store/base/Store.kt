@@ -1,8 +1,8 @@
 package com.sxtanna.aspiriamc.store.base
 
-import com.sxtanna.aspiriamc.base.Identified
+import com.sxtanna.aspiriamc.base.Unique
 
-interface Store<T : Identified<I>, I : Any> {
+interface Store<T : Unique<I>, I : Any> {
 
     fun save(data: T)
 

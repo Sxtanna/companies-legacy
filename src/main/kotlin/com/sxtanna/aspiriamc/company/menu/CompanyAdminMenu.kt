@@ -90,7 +90,7 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null)
             displayName = "&f$display "
             lore = listOf(
                     "&7Items Sold: &a${account.itemsSold}",
-                    "&7Items Selling: &a${company.product.count { it.stafferUUID ==  uuid }}",
+                    "&7Items Selling: &a${company.product.count { it.stafferUUID == uuid }}",
                     "",
                     "&7Payout Ratio: &a${account.payoutRatio}&7%",
                     "&7Player Earnings: &a$${account.playerPayout}",
@@ -100,7 +100,7 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null)
                     "&eRight-Click&7 to increase payout percentage"
             )
 
-            (this as SkullMeta).owner = display
+            (this as SkullMeta).owningPlayer = company.plugin.server.getOfflinePlayer(uuid)
         }
     }
 

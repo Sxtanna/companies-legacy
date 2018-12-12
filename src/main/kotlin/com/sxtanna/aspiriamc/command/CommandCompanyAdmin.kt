@@ -22,8 +22,12 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
 
     override fun CommandContext.evaluate() {
-        val targetText = input.getOrNull(0) ?: return reply("&cwhat do you want to do?")
-        val targetBase = subCommands[targetText.toLowerCase()] ?: return reply("&cSub-Command &7$targetText&c doesn't exist")
+        val targetText = notNull(input.getOrNull(0)) {
+            "&cwhat do you want to do?"
+        }
+        val targetBase = notNull(subCommands[targetText.toLowerCase()]) {
+            "&cSub-Command &7$targetText&c doesn't exist"
+        }
 
         if (sender.hasPermission(targetBase.perm).not()) {
             return reply("&cYou don't have permission to use this command")
@@ -66,6 +70,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
     }
 
 
+    @Suppress("unused") // used to  restrict caller
     private inline fun CommandContext.retrieveStafferByUUID(playerUUID: UUID, crossinline block: (staffer: Staffer) -> Unit) {
         val stafferResult = plugin.stafferManager.get(playerUUID) { data, _ ->
             block.invoke(data)
@@ -75,8 +80,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
             is Some -> {
                 block.invoke(stafferResult.data)
             }
-            is None -> { /* it's loading, or there's an error */
-            }
+            is None -> { /* it's loading, or there's an error */ }
         }
     }
 
@@ -98,8 +102,8 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
         override fun CommandContext.evaluate() {
             async {
-                plugin.stafferManager.staffers.forEach(plugin.database::saveStaffer)
-                plugin.companyManager.companies.forEach(plugin.database::saveCompany)
+                plugin.stafferManager.staffers.forEach(plugin.companyDatabase::saveStaffer)
+                plugin.companyManager.companies.forEach(plugin.companyDatabase::saveCompany)
 
                 sync {
                     reply("&asuccessfully saved all staffers and companies")
@@ -124,7 +128,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
             }
 
             retrieveStafferByName(targetName) { player, staffer ->
-                when(val result = fixStaffer(staffer))  {
+                when (val result = fixStaffer(staffer)) {
                     is Some -> {
                         reply("&asuccess:&7 ${result.data}")
                     }
@@ -141,7 +145,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
 
         private fun fixStaffer(staffer: Staffer): Result<String> = Result.of {
-            when(staffer.companyUUID) {
+            when (staffer.companyUUID) {
                 null -> {
                     plugin.companyManager.companies.forEach {
                         if (staffer.uuid !in it) return@forEach

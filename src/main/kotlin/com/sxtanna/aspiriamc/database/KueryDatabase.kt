@@ -4,9 +4,9 @@ import com.sxtanna.aspiriamc.Companies
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.config.Configs.COMPANY_COMMAND_TOP_MAX
+import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.DEF_KORM
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.exts.ensureUsable
-import com.sxtanna.aspiriamc.exts.korm
 import com.sxtanna.db.Kuery
 import com.sxtanna.db.KueryTask
 import com.sxtanna.db.config.KueryConfig
@@ -15,6 +15,7 @@ import com.sxtanna.db.ext.PrimaryKey
 import com.sxtanna.db.struct.Database
 import com.sxtanna.db.struct.Resolver
 import com.sxtanna.db.struct.base.Duplicate.Update
+import com.sxtanna.korm.Korm
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.bukkit.Material
@@ -45,9 +46,9 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
         con = try {
             require(file.exists())
-            korm.pull(file).to() ?: KueryConfig.DEFAULT
+            plugin.korm.pull(file).to() ?: KueryConfig.DEFAULT
         } catch (ex: Exception) {
-            korm.push(KueryConfig.DEFAULT, ensureUsable(file))
+            plugin.korm.push(KueryConfig.DEFAULT, file.ensureUsable())
 
             KueryConfig.DEFAULT
         }
@@ -94,11 +95,12 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
             insert(base.COMPANY, Update(
                     InDBCompany::name,
                     InDBCompany::icon,
+                    InDBCompany::tariffs,
                     InDBCompany::balance,
                     InDBCompany::account,
                     InDBCompany::staffer,
                     InDBCompany::product),
-                    InDBCompany(data))
+                   InDBCompany(data))
         }
 
         if (async.not()) {
@@ -148,7 +150,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
         insert(base.STAFFER, Update(
                 InDBStaffer::companyUUID,
                 InDBStaffer::voidedItems),
-                InDBStaffer(data))
+               InDBStaffer(data))
     }
 
 
@@ -198,9 +200,9 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                 company.icon,
                 company.finance.tariffs,
                 company.finance.balance,
-                korm.push(company.finance.account),
-                korm.push(company.staffer),
-                korm.push(company.product))
+                DEF_KORM.push(company.finance.account),
+                DEF_KORM.push(company.staffer),
+                DEF_KORM.push(company.product))
 
 
         override fun toData(): Company {
@@ -210,9 +212,9 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                     icon,
                     tariffs,
                     balance,
-                    korm.pull(account).toHash(),
-                    korm.pull(staffer).toList(),
-                    korm.pull(product).toList())
+                    DEF_KORM.pull(account).toHash(),
+                    DEF_KORM.pull(staffer).toList(),
+                    DEF_KORM.pull(product).toList())
         }
 
     }
@@ -227,14 +229,14 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
         constructor(staffer: Staffer) : this(
                 staffer.uuid,
                 staffer.companyUUID,
-                korm.push(staffer.voidedItems))
+                DEF_KORM.push(staffer.voidedItems))
 
 
         override fun toData(): Staffer {
             return Staffer().updateData(
                     uuid,
                     if (companyUUID == Consts.DEF_UUID) null else companyUUID,
-                    korm.pull(voidedItems).toList())
+                    DEF_KORM.pull(voidedItems).toList())
         }
 
     }
@@ -242,6 +244,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
     private object Consts {
 
+        val DEF_KORM = Korm()
         val DEF_UUID = UUID.randomUUID()
 
     }

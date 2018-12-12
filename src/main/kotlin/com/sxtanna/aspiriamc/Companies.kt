@@ -4,7 +4,7 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.config.Configs.STORAGE_DATABASE_TYPE
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
-import com.sxtanna.aspiriamc.hooks.VaultHook
+import com.sxtanna.aspiriamc.hooks.EconomyHook
 import com.sxtanna.aspiriamc.manager.*
 import com.sxtanna.aspiriamc.manager.base.Manager
 import com.sxtanna.aspiriamc.menu.Menu
@@ -23,14 +23,12 @@ import java.util.*
 
 class Companies : JavaPlugin() {
 
-    private val korm = Korm()
-    private val managers = mutableListOf<Manager>()
+    val korm = Korm()
+    val managers = mutableListOf<Manager>()
 
 
-    lateinit var vaultHook: VaultHook
-
-    lateinit var database: CompanyDatabase
-
+    lateinit var economyHook: EconomyHook
+    lateinit var companyDatabase: CompanyDatabase
 
     lateinit var configsManager: ConfigsManager
     lateinit var garnishManager: GarnishManager
@@ -41,15 +39,15 @@ class Companies : JavaPlugin() {
     lateinit var marketsManager: MarketsManager
 
     lateinit var stafferManager: StafferManager
-    lateinit var hiringsManager: HiringsManager
     lateinit var companyManager: CompanyManager
+    lateinit var hiringsManager: HiringsManager
     lateinit var reportsManager: ReportsManager
 
 
     override fun onLoad() {
         saveDefaultConfig()
 
-        vaultHook = VaultHook(this)
+        economyHook = EconomyHook(this)
 
         configsManager = ConfigsManager(this)
         garnishManager = GarnishManager(this)
@@ -64,22 +62,21 @@ class Companies : JavaPlugin() {
         companyManager = CompanyManager(this)
         reportsManager = ReportsManager(this)
 
-        database = configsManager.get(STORAGE_DATABASE_TYPE).createDatabase(this)
+        companyDatabase = configsManager.get(STORAGE_DATABASE_TYPE).createDatabase(this)
 
         managers += listOf(configsManager, garnishManager, listensManager, commandManager, marketsManager, stafferManager, hiringsManager, companyManager, reportsManager)
     }
 
     override fun onEnable() {
-        if (vaultHook.attemptHook().not()) {
+        if (economyHook.attemptHook().not()) {
             logger.severe("Failed to hook into vault, disabling")
             server.pluginManager.disablePlugin(this)
             return
         }
 
         try {
-            database.load()
-        }
-        catch (ex: Exception) {
+            companyDatabase.load()
+        } catch (ex: Exception) {
             logger.severe("Failed to load the database: ${ex.message}")
             ex.printStackTrace()
 
@@ -93,8 +90,7 @@ class Companies : JavaPlugin() {
                 logger.info("Enabled Manager:${it.name}")
 
                 it.enabled = true
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 logger.severe("Failed to enable Manager:${it.name} =S=")
                 ex.printStackTrace()
                 logger.severe("Failed to enable Manager:${it.name} =E=")
@@ -111,8 +107,7 @@ class Companies : JavaPlugin() {
                 logger.info("Disabled Manager:${it.name}")
 
                 it.enabled = false
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 logger.severe("Failed to disable Manager:${it.name} =S=")
                 ex.printStackTrace()
                 logger.severe("Failed to disable Manager:${it.name} =E=")
@@ -121,9 +116,6 @@ class Companies : JavaPlugin() {
 
         HandlerList.unregisterAll(MenuListener)
     }
-
-
-    internal fun korm() = korm
 
 
     internal fun quickAccessStaffer(stafferUUID: UUID): Staffer? {
@@ -154,8 +146,7 @@ class Companies : JavaPlugin() {
 
             if (slotType == OUTSIDE) {
                 menu.onEmptyClick(player, click)
-            }
-            else {
+            } else {
                 menu.onSlotsClick(player, click, slot)
                 menu.push(player, click, slot)
             }

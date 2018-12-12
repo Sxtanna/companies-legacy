@@ -15,13 +15,13 @@ class GarnishManager(override val plugin: Companies) : Manager("Garnish") {
     private val file = pluginFolder.resolve("garnish.yml")
 
     private val conf: FileConfiguration
-        get() = YamlConfiguration.loadConfiguration(ensureUsable(file))
+        get() = YamlConfiguration.loadConfiguration(file.ensureUsable())
 
 
     override fun enable() {
         if (file.exists()) return
 
-        ensureUsable(file).writeText(Garnish.defaults)
+        file.ensureUsable().writeText(Garnish.defaults)
     }
 
 
@@ -41,8 +41,7 @@ class GarnishManager(override val plugin: Companies) : Manager("Garnish") {
                     }
                 }
             }
-        }
-        catch (ex: Exception) {
+        } catch (ex: Exception) {
             plugin.logger.warning("failed to send garnish ${garnish::class.simpleName} to ${sender.name}: ${ex.message}")
         }
     }

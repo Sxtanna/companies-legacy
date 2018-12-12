@@ -7,7 +7,6 @@ import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
 import com.sxtanna.aspiriamc.manager.base.Manager
 import com.sxtanna.aspiriamc.market.Product
-import java.util.*
 
 class ReportsManager(override val plugin: Companies) : Manager("Reports") {
 
@@ -52,7 +51,7 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
         val payouts = if (company.staffer.size == 1) revenue else ((revenue / 100.0) * account.payoutRatio)
 
         account.soldItem(product.cost, payouts)
-        plugin.vaultHook.attemptGive(stafferUUID, revenue)
+        plugin.economyHook.attemptGive(stafferUUID, revenue)
 
         revenue -= payouts
 
@@ -64,76 +63,8 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
             if (it == stafferUUID) return@forEach
 
             company.finance[it].playerPayout += revenue
-            plugin.vaultHook.attemptGive(it, revenue)
+            plugin.economyHook.attemptGive(it, revenue)
         }
-    }
-
-
-    private fun calculatePayout(company: Company, revenue: Double): Map<UUID, Double> {
-        val outputs = mutableMapOf<UUID, Double>()
-
-        // legacy shit
-        /*when (company.staffer.size) {
-            1 -> {
-                outputs[company.staffer.first()] = revenue
-            }
-            2 -> {
-                outputs[company.staffer[0]] = revenue / 2
-                outputs[company.staffer[1]] = revenue / 2
-            }
-            else -> when (CompanyPayoutMode.determine(company)) {
-                EVEN -> {
-                    val owner = ((revenue / company.staffer.size) * 2).formatToTwoPlaces()
-                    val staff = ((revenue - owner) / company.staffer.size).formatToTwoPlaces()
-
-                    outputs[company.staffer[0]] = owner
-
-                    company.staffer.drop(1).forEach {
-                        outputs[it] = staff
-                    }
-                }
-                USER -> {
-                    var visited = 0
-                    var revenue = revenue
-                    val ordered = company.staffer.sortedByDescending { company.finance[it].payoutRatio }
-
-                    ordered.forEach {
-                        val percent = company.finance[it].payoutRatio
-                        val payouts = ((revenue / (company.staffer.size - visited)) * percent).formatToTwoPlaces()
-
-                        if (percent != 1) {
-                            visited += 1
-                            revenue -= payouts
-                        }
-
-                        outputs[it] = payouts
-                    }
-                }
-            }
-        }*/
-
-        return outputs
-    }
-
-
-    enum class CompanyPayoutMode {
-
-        EVEN,
-        USER;
-
-
-        companion object {
-
-            fun determine(company: Company): CompanyPayoutMode {
-                if (company.finance.account.values.all { it.payoutRatio == 1 }) {
-                    return EVEN
-                }
-
-                return USER
-            }
-
-        }
-
     }
 
 }

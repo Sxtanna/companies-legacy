@@ -28,7 +28,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         sponsored.forEach {
             val (row, col) = slotToGrid(sponSlots.nextInt())
 
-            this[row, col, it.createDisplayIcon()] = {
+            this[row, col, it.createIcon()] = {
                 plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
                 createChosenCompanyMarketMenu(it).open(who)
             }
@@ -50,7 +50,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         pagination.page().forEach {
             val (row, col) = slotToGrid(compSlots.nextInt())
 
-            this[row, col, it.createDisplayIcon()] = {
+            this[row, col, it.createIcon()] = {
                 plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
                 createChosenCompanyMarketMenu(it).open(who)
             }
@@ -92,7 +92,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
                     "",
                     "&7Total Items Sold: &a${company.finance.account.values.sumBy { it.itemsSold }}",
                     "&7Total Earnings: &a${company.finance.account.values.sumByDouble { it.playerPayout }.formatToTwoPlaces()}"
-            )
+                         )
         }
 
         this[Row.R_6, Col.C_9, button] = {
@@ -109,7 +109,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
 
             lore = listOf(
                     "&7Items Voided: &a${staffer.voidedItems.size}"
-            )
+                         )
         }
 
         this[Row.R_6, Col.C_9, button] = {
@@ -132,8 +132,6 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
     }
 
 
-
-
     private fun createEmptySponsorSlot(): ItemStack {
         return buildItemStack(GRAY_STAINED_GLASS_PANE) {
             displayName = "&eSponsor Slot"
@@ -141,7 +139,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
                     "",
                     "&fBuy a sponsor slot for: &a${plugin.companyManager.sponsorManager.humanReadableTime()}",
                     "&7Cost: &a$${plugin.companyManager.sponsorManager.slotCost.formatToTwoPlaces()}"
-            )
+                         )
         }
     }
 

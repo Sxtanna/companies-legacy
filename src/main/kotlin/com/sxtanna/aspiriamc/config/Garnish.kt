@@ -12,17 +12,16 @@ sealed class Garnish<T : Any?> : ConfigPath<T> {
     abstract val default: T
 
 
-    abstract class SoundGarnish(final override val pathString: String) : Garnish<Sound?>() {
+    abstract class SoundGarnish(final override val path: String) : Garnish<Sound?>() {
 
         abstract override val default: Sound
 
         override fun value(yaml: ConfigurationSection): Sound? {
-            val value = yaml.getString(pathString, default.name).toUpperCase()
+            val value = yaml.getString(path, default.name).toUpperCase()
 
             return if (value == "NONE") {
                 null
-            }
-            else {
+            } else {
                 Sound.valueOf(value)
             }
         }
@@ -124,7 +123,7 @@ sealed class Garnish<T : Any?> : ConfigPath<T> {
 
         @Language("YAML")
         val defaults =
-                """
+            """
                   menu:
                     button-back: UI_BUTTON_CLICK
                     button-click: UI_BUTTON_CLICK
@@ -150,7 +149,6 @@ sealed class Garnish<T : Any?> : ConfigPath<T> {
                 """.trimIndent()
 
     }
-
 
 
 }

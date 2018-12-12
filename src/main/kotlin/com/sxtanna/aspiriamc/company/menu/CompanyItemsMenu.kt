@@ -7,6 +7,7 @@ import com.sxtanna.aspiriamc.config.Garnish.MENU_BUTTON_CLICK
 import com.sxtanna.aspiriamc.exts.base64ToItemStack
 import com.sxtanna.aspiriamc.exts.buildItemStack
 import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
+import com.sxtanna.aspiriamc.exts.inventoryCanHold
 import com.sxtanna.aspiriamc.market.Product
 import com.sxtanna.aspiriamc.market.sort.ProductSorter
 import com.sxtanna.aspiriamc.menu.Menu
@@ -26,12 +27,12 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
         pagination.page().sortedWith(ProductSorter.ByCost).forEach {
             val (row, col) = slotToGrid(itemSlots.nextInt())
 
-            val item = buildItemStack(it.createDisplayIcon()) {
+            val item = buildItemStack(it.createIcon()) {
                 lore = listOf(
                         *(lore ?: emptyList()).toTypedArray(),
                         "",
                         "&eRight-Click &7to stop selling this item"
-                )
+                             )
             }
 
             this[row, col, item] = out@{
@@ -39,18 +40,18 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
 
                 company.plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
 
-                when(val result = base64ToItemStack(it.base)) {
+                when (val result = base64ToItemStack(it.base)) {
                     is Some -> {
-                        if (who.inventory.addItem(result.data).isNotEmpty()) {
-                            reply("&cyour inventory is full")
-                        }
-                        else {
+                        if (who.inventoryCanHold(result.data)) {
+                            who.inventory.addItem(result.data)
+
                             company.product -= it
                             fresh()
+                        } else {
+                            reply("&cfailed to reclaim item: your inventory is full")
                         }
                     }
-                    is None -> {
-
+                    is None -> { /* SOL my dude*/
                     }
                 }
             }
@@ -70,7 +71,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
                     "&7Company Tax: &a${company.finance.tariffs}&7%",
                     "&7Total Revenue: &a$${company.finance.account.values.sumByDouble { it.playerProfit }.formatToTwoPlaces()}",
                     "&7Total Employee Earnings: &a$${company.finance.account.values.sumByDouble { it.playerPayout }.formatToTwoPlaces()}"
-            )
+                         )
         }
 
         this[Row.R_6, Col.C_1, statsButton] = {}

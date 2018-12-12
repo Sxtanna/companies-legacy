@@ -1,11 +1,11 @@
 package com.sxtanna.aspiriamc.market
 
 import com.sxtanna.aspiriamc.Companies
-import com.sxtanna.aspiriamc.base.Displayable
-import com.sxtanna.aspiriamc.base.Identified
+import com.sxtanna.aspiriamc.base.Iconable
 import com.sxtanna.aspiriamc.base.Named
 import com.sxtanna.aspiriamc.base.Result.None
 import com.sxtanna.aspiriamc.base.Result.Some
+import com.sxtanna.aspiriamc.base.Unique
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.exts.base64ToItemStack
 import com.sxtanna.aspiriamc.exts.buildItemStack
@@ -15,7 +15,7 @@ import org.bukkit.Material.BARRIER
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Product : Named, Identified<UUID>, Displayable {
+class Product : Named, Unique<UUID>, Iconable {
 
     @Transient
     internal lateinit var plugin: Companies
@@ -40,7 +40,7 @@ class Product : Named, Identified<UUID>, Displayable {
 
 
     fun updateData(staffer: Staffer, item: ItemStack, date: Long, cost: Double): Product {
-        this.base = when(val result = itemStackToBase64(item)) {
+        this.base = when (val result = itemStackToBase64(item)) {
             is Some -> result.data
             is None -> ""
         }
@@ -54,7 +54,7 @@ class Product : Named, Identified<UUID>, Displayable {
     }
 
 
-    override fun createDisplayIcon(): ItemStack {
+    override fun createIcon(): ItemStack {
         return when (val item = base64ToItemStack(base)) {
             is Some -> buildItemStack(item.data) {
                 if (name.isBlank()) {

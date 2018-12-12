@@ -12,6 +12,7 @@ enum class Col {
     C_8,
     C_9;
 
+
     fun slot(row: Row): Int {
         return (row.ordinal * 9) + ordinal
     }

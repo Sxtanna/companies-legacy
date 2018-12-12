@@ -30,7 +30,7 @@ class HiringsManager(override val plugin: Companies) : Manager("Hiring") {
             val iter0 = cache.iterator()
 
             while (iter0.hasNext()) {
-                val (k, v) = iter0.next()
+                val (_, v) = iter0.next()
 
                 val iter1 = v.iterator()
 
@@ -39,8 +39,7 @@ class HiringsManager(override val plugin: Companies) : Manager("Hiring") {
 
                     if (next1.value == 1L) {
                         iter1.remove()
-                    }
-                    else {
+                    } else {
                         next1.setValue(next1.value - 1)
                     }
                 }
@@ -63,7 +62,7 @@ class HiringsManager(override val plugin: Companies) : Manager("Hiring") {
 
 
     fun attemptHire(company: Company, staffer: Staffer): Result<Unit> = Result.of {
-        when(val hirings = hirings(staffer)) {
+        when (val hirings = hirings(staffer)) {
             is Some -> {
                 if (hirings.data.size >= 5) fail("already being hired by 5 companies, please wait")
             }
@@ -76,6 +75,7 @@ class HiringsManager(override val plugin: Companies) : Manager("Hiring") {
         }
     }
 
+    @Suppress("UNUSED_VARIABLE") // used to return as Unit
     fun attemptStop(company: Company, staffer: Staffer): Result<Unit> = Result.of {
         val hirings = cache[company] ?: fail("no hiring invitations have been sent")
         val remains = hirings.remove(staffer.uuid) ?: fail("is not being hired")

@@ -1,6 +1,6 @@
 package com.sxtanna.aspiriamc.base
 
-interface Identified<I : Any> {
+interface Unique<I : Any> {
 
     val uuid: I
 

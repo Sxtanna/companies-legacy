@@ -19,8 +19,7 @@ enum class DatabaseType(private val create: (Companies) -> CompanyDatabase) {
 
         fun get(name: String) = try {
             valueOf(name.toUpperCase())
-        }
-        catch (ignored: Exception) {
+        } catch (ignored: Exception) {
             LOCAL
         }
 

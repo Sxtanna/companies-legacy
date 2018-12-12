@@ -4,6 +4,7 @@ import com.sxtanna.aspiriamc.base.Result
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.command.Command
+import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.inventory.meta.ItemMeta
@@ -16,23 +17,24 @@ import java.util.*
 
 typealias BukkitCommand = Command
 
-fun ensureUsable(file: File): File {
-    if (file.exists().not()) {
-        file.parentFile.mkdirs()
-        file.createNewFile()
-    }
+// general extensions
 
-    return file
+fun File.ensureUsable(): File {
+    if (exists()) return this
+
+    parentFile.mkdirs()
+    createNewFile()
+
+    return this
 }
 
-fun colorFormat(text: String): String {
-    return ChatColor.translateAlternateColorCodes('&', text)
+fun Enum<*>.properName(): String {
+    return name.split("_").joinToString(" ") { it.toLowerCase().capitalize() }
 }
 
-fun colorStrip(text: String): String {
-    return ChatColor.stripColor(text)
+fun String.ownership(): String {
+    return "$this${if (this.endsWith('s', true)) "'" else "'s"}"
 }
-
 
 fun Double.formatToTwoPlaces(): Double {
     val text = toBigDecimal().toPlainString()
@@ -46,33 +48,28 @@ fun Double.formatToTwoPlaces(): Double {
 }
 
 
-fun Enum<*>.properName(): String {
-    return name.split("_").joinToString(" ") { it.toLowerCase().capitalize() }
+// bukkit functions
+
+fun color(text: String): String {
+    return ChatColor.translateAlternateColorCodes('&', text)
 }
 
-fun String.ownership(): String {
-    return "$this${if (this.endsWith('s', true)) "'" else "'s"}"
+fun strip(text: String): String {
+    return ChatColor.stripColor(text)
 }
 
 
-fun buildItemStack(type: Material, data: Int = 0, amount: Int = 1, block: ItemMeta.() -> Unit = { }): ItemStack {
-    return buildItemStack(ItemStack(type, amount, 0.toShort(), data.takeIf { it != 0 }?.toByte()), amount, block)
-}
+fun itemStackName(item: ItemStack): String {
+    val meta = (if (item.hasItemMeta()) item.itemMeta else null) ?: return item.type.properName()
 
-fun buildItemStack(item: ItemStack, amount: Int = item.amount, block: ItemMeta.() -> Unit = { }): ItemStack {
-    return item.apply {
-        this.amount = amount
-        val meta = this.itemMeta.apply(block)
-
-        if (meta.hasDisplayName()) {
-            meta.displayName = colorFormat(meta.displayName)
-        }
-
-        if (meta.hasLore()) {
-            meta.lore = meta.lore.map(::colorFormat)
-        }
-
-        this.itemMeta = meta
+    return if (meta is BookMeta && meta.hasTitle()) {
+        meta.title
+    }
+    else if (meta.hasDisplayName()) {
+        meta.displayName
+    }
+    else {
+        item.type.properName()
     }
 }
 
@@ -98,16 +95,38 @@ fun base64ToItemStack(text: String): Result<ItemStack> = Result.of {
 }
 
 
-fun itemStackName(item: ItemStack): String {
-    val meta = (if (item.hasItemMeta()) item.itemMeta else null) ?: return item.type.properName()
+fun buildItemStack(item: ItemStack, amount: Int = item.amount, block: ItemMeta.() -> Unit = { }): ItemStack {
+    return item.apply {
+        this.amount = amount
+        val meta = this.itemMeta.apply(block)
 
-    return if (meta is BookMeta && meta.hasTitle()) {
-        meta.title
+        if (meta.hasDisplayName()) {
+            meta.displayName = color(meta.displayName)
+        }
+
+        if (meta.hasLore()) {
+            meta.lore = meta.lore.map(::color)
+        }
+
+        this.itemMeta = meta
     }
-    else if (meta.hasDisplayName()) {
-        meta.displayName
+}
+
+fun buildItemStack(type: Material, amount: Int = 1, block: ItemMeta.() -> Unit = { }): ItemStack {
+    return buildItemStack(ItemStack(type, amount), amount, block)
+}
+
+
+// bukkit extensions
+
+fun Player.inventoryCanHold(item: ItemStack): Boolean {
+
+    inventory.storageContents.forEach { held: ItemStack? ->
+        if (held == null) return true
+        if (held.isSimilar(item).not()) return@forEach
+
+        if (held.amount + item.amount <= held.maxStackSize) return true
     }
-    else {
-        item.type.properName()
-    }
+
+    return false
 }
