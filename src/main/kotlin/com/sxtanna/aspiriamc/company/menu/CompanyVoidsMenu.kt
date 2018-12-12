@@ -33,6 +33,8 @@ class CompanyVoidsMenu(val plugin: Companies, val staffer: Staffer, val prevMenu
                 plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
 
                 if (who.inventoryCanHold(item)) {
+                    who.inventory.addItem(item)
+
                     staffer.voidedItems -= it
                     fresh()
                 } else {
