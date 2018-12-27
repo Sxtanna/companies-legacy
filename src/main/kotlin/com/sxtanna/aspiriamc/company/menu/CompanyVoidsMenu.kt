@@ -71,7 +71,7 @@ class CompanyVoidsMenu(val plugin: Companies, val staffer: Staffer, val prevMenu
     companion object {
 
         private val itemStackSlots: IntIterator
-            get() = (0..45).iterator()
+            get() = (0..44).iterator()
 
     }
 

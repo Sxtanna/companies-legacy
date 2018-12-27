@@ -4,6 +4,8 @@ import com.sxtanna.aspiriamc.Companies
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
+import com.sxtanna.aspiriamc.reports.Format
+import com.sxtanna.aspiriamc.reports.Report
 import java.util.*
 
 class RedisDatabase(override val plugin: Companies) : CompanyDatabase {
@@ -46,4 +48,13 @@ class RedisDatabase(override val plugin: Companies) : CompanyDatabase {
     override fun saveStaffer(data: Staffer) {
         TODO("not implemented")
     }
+
+    override fun saveReport(report: Report) {
+        TODO("not implemented")
+    }
+
+    override fun loadReport(format: Format, before: Long, returnSync: Boolean, onLoad: (List<Report>) -> Unit) {
+        TODO("not implemented")
+    }
+
 }

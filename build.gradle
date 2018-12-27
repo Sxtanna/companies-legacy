@@ -27,17 +27,23 @@ repositories {
 }
 
 dependencies {
+    // kotlin shit
     compile "org.jetbrains.kotlin:kotlin-reflect"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:+"
-
-    // minecraft
-    compileOnly "com.destroystokyo.paper:paper-api:+"
-
+    
+    
     // compile libs
     compile "com.sxtanna.db:Kuery:1.5.4"
     compile "com.sxtanna.korm:Korm:1.6.2"
 
+    compile fileTree(dir: 'gradle/lib', include: ['*.jar'])
+
+    
+    // minecraft
+    compileOnly "com.destroystokyo.paper:paper-api:+"
+
+    
     // runtime libs
     compileOnly("net.milkbowl.vault:VaultAPI:1.7") {
         exclude module: "bukkit"

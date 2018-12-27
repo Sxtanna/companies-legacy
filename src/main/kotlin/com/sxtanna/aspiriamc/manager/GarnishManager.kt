@@ -43,6 +43,7 @@ class GarnishManager(override val plugin: Companies) : Manager("Garnish") {
             }
         } catch (ex: Exception) {
             plugin.logger.warning("failed to send garnish ${garnish::class.simpleName} to ${sender.name}: ${ex.message}")
+            plugin.reportsManager.reportException(ex)
         }
     }
 

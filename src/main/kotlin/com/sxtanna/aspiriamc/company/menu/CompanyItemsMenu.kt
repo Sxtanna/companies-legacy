@@ -3,23 +3,23 @@ package com.sxtanna.aspiriamc.company.menu
 import com.sxtanna.aspiriamc.base.Result.None
 import com.sxtanna.aspiriamc.base.Result.Some
 import com.sxtanna.aspiriamc.company.Company
+import com.sxtanna.aspiriamc.config.Configs.COMPANY_HISTORY_TIME
+import com.sxtanna.aspiriamc.config.Configs.COMPANY_HISTORY_UNIT
 import com.sxtanna.aspiriamc.config.Garnish.MENU_BUTTON_CLICK
-import com.sxtanna.aspiriamc.exts.base64ToItemStack
-import com.sxtanna.aspiriamc.exts.buildItemStack
-import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
-import com.sxtanna.aspiriamc.exts.inventoryCanHold
+import com.sxtanna.aspiriamc.exts.*
 import com.sxtanna.aspiriamc.market.Product
 import com.sxtanna.aspiriamc.market.sort.ProductSorter
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
-import org.bukkit.Material.BOOK
-import org.bukkit.Material.REPEATING_COMMAND_BLOCK
+import org.bukkit.Material.*
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType.RIGHT
+import java.util.concurrent.TimeUnit
 
 class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null) : Menu("&nProducts&r &l»&r ${company.name}", Row.R_6) {
 
+    private var clicked = false
     private val pagination = ChosenPagination()
 
     override fun build() {
@@ -28,11 +28,9 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
             val (row, col) = slotToGrid(itemSlots.nextInt())
 
             val item = buildItemStack(it.createIcon()) {
-                lore = listOf(
-                        *(lore ?: emptyList()).toTypedArray(),
-                        "",
-                        "&eRight-Click &7to stop selling this item"
-                             )
+                lore = listOf(*(lore ?: emptyList()).toTypedArray(),
+                              "",
+                              "&eRight-Click &7to stop selling this item")
             }
 
             this[row, col, item] = out@{
@@ -46,6 +44,9 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
                             who.inventory.addItem(result.data)
 
                             company.product -= it
+
+                            company.plugin.reportsManager.reportTakeItem(who, it, company)
+
                             fresh()
                         } else {
                             reply("&cfailed to reclaim item: your inventory is full")
@@ -62,16 +63,14 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
         val statsButton = buildItemStack(BOOK) {
             displayName = "&f${company.name}"
 
-            lore = listOf(
-                    "&7Items Selling: &a${company.product.size}",
-                    "&7Employees: &a${company.staffer.size}",
-                    "",
-                    "&fMoney",
-                    "&7Company Vault: &a$${company.finance.balance}",
-                    "&7Company Tax: &a${company.finance.tariffs}&7%",
-                    "&7Total Revenue: &a$${company.finance.account.values.sumByDouble { it.playerProfit }.formatToTwoPlaces()}",
-                    "&7Total Employee Earnings: &a$${company.finance.account.values.sumByDouble { it.playerPayout }.formatToTwoPlaces()}"
-                         )
+            lore = listOf("&7Items Selling: &a${company.product.size}",
+                          "&7Employees: &a${company.staffer.size}",
+                          "",
+                          "&fMoney",
+                          "&7Company Vault: &a$${company.finance.balance}",
+                          "&7Company Tax: &a${company.finance.tariffs}&7%",
+                          "&7Total Revenue: &a$${company.finance.account.values.sumByDouble { it.playerProfit }.formatToTwoPlaces()}",
+                          "&7Total Employee Earnings: &a$${company.finance.account.values.sumByDouble { it.playerPayout }.formatToTwoPlaces()}")
         }
 
         this[Row.R_6, Col.C_1, statsButton] = {}
@@ -83,6 +82,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
     override fun open(player: Player) {
         super.open(player)
 
+        setupHistoryButton()
         setupManageButton(player)
     }
 
@@ -91,7 +91,27 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
 
         super.fresh()
 
+        clicked = false
+        setupHistoryButton()
         setupManageButton(inventory.viewers.first() as? Player ?: return)
+    }
+
+    private fun setupHistoryButton() {
+        val time = company.plugin.configsManager.get(COMPANY_HISTORY_TIME)
+        val unit = company.plugin.configsManager.get(COMPANY_HISTORY_UNIT)
+
+        val button = buildItemStack(SIGN) {
+            displayName =  "&fView past &9$time&f ${unit.properName()} of purchases"
+        }
+
+        this[Row.R_6, Col.C_2, button] = out@ {
+            if (clicked) return@out
+
+            clicked = true
+
+            createCompanyPastsMenu(who, time, unit)
+            company.plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
+        }
     }
 
     private fun setupManageButton(player: Player) {
@@ -102,10 +122,11 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
         }
 
         this[Row.R_6, Col.C_9, button] = {
-            company.plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
             createCompanyAdminMenu().open(who)
+            company.plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
         }
     }
+
 
     private fun companyProducts(): List<List<Product>> {
         return company.product.sortedWith(ProductSorter.ByDate).chunked(45).takeIf { it.isNotEmpty() } ?: listOf(emptyList())
@@ -113,6 +134,12 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
 
     private fun createCompanyAdminMenu(): Menu {
         return CompanyAdminMenu(company, this)
+    }
+
+    private fun createCompanyPastsMenu(player: Player, time: Long, unit: TimeUnit) {
+        company.plugin.reportsManager.purchasesFromPast(company, time, unit) {
+            CompanyPastsMenu(company, time, unit, it, this).open(player)
+        }
     }
 
 
@@ -128,7 +155,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
     companion object {
 
         private val productSlots: IntIterator
-            get() = (0..45).iterator()
+            get() = (0..44).iterator()
 
     }
 

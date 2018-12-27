@@ -254,9 +254,6 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
             cached.putAll(sponsoredCompanies)
 
-            //println("Loaded $sponsoredCompanies")
-            //println("Cached $cached")
-
             repeatAsync(20 * 60) {
                 if (cached.isEmpty()) return@repeatAsync
 
@@ -277,18 +274,25 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
         }
 
 
+        fun isSponsored(company: Company): Boolean {
+            return company.uuid in cached
+        }
+
         fun attemptPurchaseSponsorship(company: Company, player: Player) = of {
-            when (val existed = cached[company.uuid]) {
-                null -> when (val result = plugin.economyHook.attemptTake(player, slotCost)) {
+            when {
+                cached.size >= 9     -> {
+                    fail("no available sponsor slots left")
+                }
+                isSponsored(company) -> {
+                    fail("company is already sponsored, ${sponsorshipTimeLeft(company)} left")
+                }
+                else                 -> when (val result = plugin.economyHook.attemptTake(player, slotCost)) {
                     is Some -> {
                         cached[company.uuid] = currentTimeMillis()
                     }
                     is None -> {
                         result.rethrow()
                     }
-                }
-                else -> {
-                    fail("company is already sponsored, ${humanReadableTime(liveTime - SECONDS.convert((currentTimeMillis() - existed), MILLISECONDS))} left")
                 }
             }
         }
@@ -335,6 +339,15 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
             if (days > 1) unit += 's'
 
             return "$days $unit${if (remains == 0L) "" else " and $remains hours"}"
+        }
+
+        fun sponsorshipTimeLeft(company: Company): String {
+            val existed = cached[company.uuid]
+            if (existed == null || existed == 0L) {
+                return "none"
+            }
+
+            return humanReadableTime(liveTime - SECONDS.convert((currentTimeMillis() - existed), MILLISECONDS))
         }
 
     }

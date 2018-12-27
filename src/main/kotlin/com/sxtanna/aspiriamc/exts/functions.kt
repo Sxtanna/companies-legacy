@@ -1,7 +1,12 @@
 package com.sxtanna.aspiriamc.exts
 
+import com.sxtanna.aspiriamc.Companies
 import com.sxtanna.aspiriamc.base.Result
+import com.sxtanna.aspiriamc.menu.item.UpdatingItemStack
+import me.tom.sparse.spigot.chat.menu.ChatMenu
+import me.tom.sparse.spigot.chat.menu.ChatMenuAPI
 import org.bukkit.ChatColor
+import org.bukkit.DyeColor
 import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.entity.Player
@@ -10,12 +15,13 @@ import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.util.io.BukkitObjectInputStream
 import org.bukkit.util.io.BukkitObjectOutputStream
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
+import java.io.*
 import java.util.*
 
 typealias BukkitCommand = Command
+
+typealias TimChatMenu = ChatMenu
+typealias TimChatMenuAPI = ChatMenuAPI
 
 // general extensions
 
@@ -47,6 +53,10 @@ fun Double.formatToTwoPlaces(): Double {
     }.toDouble()
 }
 
+fun Throwable.consume(): String {
+    return StringWriter().apply { printStackTrace(PrintWriter(this)) }.toString()
+}
+
 
 // bukkit functions
 
@@ -64,13 +74,15 @@ fun itemStackName(item: ItemStack): String {
 
     return if (meta is BookMeta && meta.hasTitle()) {
         meta.title
-    }
-    else if (meta.hasDisplayName()) {
+    } else if (meta.hasDisplayName()) {
         meta.displayName
-    }
-    else {
+    } else {
         item.type.properName()
     }
+}
+
+fun itemStackIsColor(item: ItemStack, color: DyeColor): Boolean {
+    return COLOR_MATERIAL_ASSOCIATIONS[color]?.contains(item.type) ?: false
 }
 
 
@@ -94,26 +106,40 @@ fun base64ToItemStack(text: String): Result<ItemStack> = Result.of {
     item
 }
 
+fun updateItemMeta(item: ItemStack, block: ItemMeta.() -> Unit): ItemStack {
+    val meta = item.itemMeta.apply(block)
 
-fun buildItemStack(item: ItemStack, amount: Int = item.amount, block: ItemMeta.() -> Unit = { }): ItemStack {
-    return item.apply {
-        this.amount = amount
-        val meta = this.itemMeta.apply(block)
-
-        if (meta.hasDisplayName()) {
-            meta.displayName = color(meta.displayName)
-        }
-
-        if (meta.hasLore()) {
-            meta.lore = meta.lore.map(::color)
-        }
-
-        this.itemMeta = meta
+    if (meta.hasDisplayName()) {
+        meta.displayName = color(meta.displayName)
     }
+
+    if (meta.hasLore()) {
+        meta.lore = meta.lore.map(::color)
+    }
+
+    item.itemMeta = meta
+
+    return item
 }
 
 fun buildItemStack(type: Material, amount: Int = 1, block: ItemMeta.() -> Unit = { }): ItemStack {
     return buildItemStack(ItemStack(type, amount), amount, block)
+}
+
+fun buildItemStack(item: ItemStack, amount: Int = item.amount, block: ItemMeta.() -> Unit = { }): ItemStack {
+    return item.apply {
+        this.amount = amount
+
+        updateItemMeta(item, block)
+    }
+}
+
+fun buildUpdatingItemStack(plugin: Companies, type: Material, amount: Int = 1, block: ItemMeta.() -> Unit = { }, update: UpdatingItemStack.() -> Unit): UpdatingItemStack {
+    val item = UpdatingItemStack(plugin, type, amount, update)
+
+    buildItemStack(item, amount, block)
+
+    return item
 }
 
 

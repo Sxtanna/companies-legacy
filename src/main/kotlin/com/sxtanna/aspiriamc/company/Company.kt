@@ -1,27 +1,27 @@
 package com.sxtanna.aspiriamc.company
 
 import com.sxtanna.aspiriamc.Companies
-import com.sxtanna.aspiriamc.base.Iconable
-import com.sxtanna.aspiriamc.base.Named
-import com.sxtanna.aspiriamc.base.Result
+import com.sxtanna.aspiriamc.base.*
 import com.sxtanna.aspiriamc.base.Result.*
-import com.sxtanna.aspiriamc.base.Unique
+import com.sxtanna.aspiriamc.base.Searchable.Query
 import com.sxtanna.aspiriamc.company.Company.Finance.Account
 import com.sxtanna.aspiriamc.config.Configs.DISPLAY_DEF_ICON
 import com.sxtanna.aspiriamc.config.Configs.PAYOUTS_DEF_RATIO
 import com.sxtanna.aspiriamc.exts.buildItemStack
+import com.sxtanna.aspiriamc.exts.buildUpdatingItemStack
 import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
+import com.sxtanna.aspiriamc.exts.updateItemMeta
 import com.sxtanna.aspiriamc.manager.HiringsManager
 import com.sxtanna.aspiriamc.market.Product
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.Material.AIR
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemFlag.HIDE_ATTRIBUTES
+import org.bukkit.inventory.ItemFlag.*
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Company() : Named, Unique<UUID>, Iconable {
+class Company() : Named, Unique<UUID>, Iconable, Searchable {
     constructor(name: String) : this() {
         this.name = name
     }
@@ -45,7 +45,7 @@ class Company() : Named, Unique<UUID>, Iconable {
 
     override fun createIcon(): ItemStack {
         val type = when (icon) {
-            AIR -> {
+            AIR  -> {
                 plugin.configsManager.get(DISPLAY_DEF_ICON)
             }
             else -> {
@@ -53,17 +53,60 @@ class Company() : Named, Unique<UUID>, Iconable {
             }
         }
 
-        return buildItemStack(type) {
-            addItemFlags(HIDE_ATTRIBUTES)
+        return if (plugin.companyManager.sponsorManager.isSponsored(this)) {
+            buildUpdatingItemStack(plugin, type, 1,
+                                   block = {
+                                       addItemFlags(HIDE_ENCHANTS,
+                                                    HIDE_ATTRIBUTES,
+                                                    HIDE_UNBREAKABLE,
+                                                    HIDE_DESTROYS,
+                                                    HIDE_PLACED_ON,
+                                                    HIDE_POTION_EFFECTS)
 
-            displayName = "&f$name"
-            lore = listOf(
-                    "",
-                    "",
-                    "&7Employees: &a${staffer.size}",
-                    "&7Items for sale: &a${product.size}"
-                         )
+                                       displayName = "&f$name"
+                                       lore = listOf("",
+                                                     "",
+                                                     "&7Employees: &a${staffer.size}",
+                                                     "&7Items for sale: &a${product.size}")
+                                   },
+                                   update = {
+                                       updateItemMeta(this) {
+                                           addItemFlags(HIDE_ENCHANTS,
+                                                        HIDE_ATTRIBUTES,
+                                                        HIDE_UNBREAKABLE,
+                                                        HIDE_DESTROYS,
+                                                        HIDE_PLACED_ON,
+                                                        HIDE_POTION_EFFECTS)
+
+                                           displayName = "&e$name"
+                                           lore = listOf("",
+                                                         "",
+                                                         "&7Employees: &a${staffer.size}",
+                                                         "&7Items for sale: &a${product.size}",
+                                                         "",
+                                                         "&7${plugin.companyManager.sponsorManager.sponsorshipTimeLeft(this@Company)}")
+                                       }
+                                   })
+        } else {
+            buildItemStack(type) {
+                addItemFlags(HIDE_ENCHANTS,
+                             HIDE_ATTRIBUTES,
+                             HIDE_UNBREAKABLE,
+                             HIDE_DESTROYS,
+                             HIDE_PLACED_ON,
+                             HIDE_POTION_EFFECTS)
+
+                displayName = "&f$name"
+                lore = listOf("",
+                              "",
+                              "&7Employees: &a${staffer.size}",
+                              "&7Items for sale: &a${product.size}")
+            }
         }
+    }
+
+    override fun passes(query: Query): Boolean {
+        return product.any { it.passes(query) }
     }
 
 
@@ -141,6 +184,10 @@ class Company() : Named, Unique<UUID>, Iconable {
 
         this.staffer.addAll(staffer)
         this.product.addAll(product)
+
+        this.product.forEach {
+            it.companyUUID = this.uuid
+        }
 
         return this
     }

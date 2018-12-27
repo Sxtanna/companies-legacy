@@ -1,6 +1,7 @@
 package com.sxtanna.aspiriamc.market.menu
 
 import com.sxtanna.aspiriamc.Companies
+import com.sxtanna.aspiriamc.base.PluginDependant.PluginRunnable
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.company.menu.CompanyItemsMenu
@@ -11,6 +12,7 @@ import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
+import com.sxtanna.aspiriamc.menu.item.UpdatingItemStack
 import org.bukkit.Material.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -21,33 +23,48 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
     private var companies = plugin.companyManager.companies
 
     private val pagination = GlobalPagination()
-
+    private val executions = mutableListOf<UpdatingItemStack>()
 
     override fun build() {
         val sponSlots = sponsoredSlots
         sponsored.forEach {
+            if (sponSlots.hasNext().not()) return@forEach // edge case
+
             val (row, col) = slotToGrid(sponSlots.nextInt())
 
-            this[row, col, it.createIcon()] = {
+            val icon: ItemStack = it.createIcon()
+            val func: Menu.MenuAction.() -> Unit = {
                 plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
                 createChosenCompanyMarketMenu(it).open(who)
             }
+
+            if (icon is UpdatingItemStack) {
+                icon.extra = {
+                    this[row, col, icon] = func
+                }
+
+                executions += icon
+
+                icon.update()
+            }
+
+            this[row, col, icon] = func
         }
 
-        if (sponSlots.hasNext()) {
-            while (sponSlots.hasNext()) {
-                val (row, col) = slotToGrid(sponSlots.nextInt())
+        while (sponSlots.hasNext()) {
+            val (row, col) = slotToGrid(sponSlots.nextInt())
 
-                this[row, col, createEmptySponsorSlot()] = {
-                    plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
-                    plugin.server.dispatchCommand(who, "company sponsor")
-                    fresh()
-                }
+            this[row, col, createEmptySponsorSlot()] = {
+                plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
+                plugin.server.dispatchCommand(who, "company sponsor")
+                fresh()
             }
         }
 
         val compSlots = companiesSlots
         pagination.page().forEach {
+            if (compSlots.hasNext().not()) return@forEach // edge case
+
             val (row, col) = slotToGrid(compSlots.nextInt())
 
             this[row, col, it.createIcon()] = {
@@ -61,14 +78,9 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         initBackButton(prevMenu, plugin, Row.R_6, Col.C_5)
     }
 
-
-    override fun open(player: Player) {
-        super.open(player)
-
-        setupCompanyButton(player)
-    }
-
     override fun fresh() {
+        executions.clear()
+
         sponsored = plugin.companyManager.sponsored
         companies = plugin.companyManager.companies
 
@@ -76,23 +88,50 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
 
         super.fresh()
 
-        setupCompanyButton(inventory.viewers.first() as? Player ?: return)
+        setupCompanyFilter()
+        setupItemsButton(inventory.viewers.first() as? Player ?: return)
     }
 
 
-    private fun setupCompanyButton(player: Player) {
-        val company = plugin.quickAccessCompany(player.uniqueId) ?: return setupVoidedItems(player)
+    override fun open(player: Player) {
+        super.open(player)
+
+        setupCompanyFilter()
+        setupItemsButton(player)
+
+        instances += this
+    }
+
+    override fun onClose(player: Player) {
+        super.onClose(player)
+
+        executions.clear()
+
+        instances -= this
+    }
+
+
+    private fun setupCompanyFilter() {
+        val button = buildItemStack(HOPPER) {
+            displayName = "&fFilter items"
+        }
+
+        this[Row.R_6, Col.C_1, button] = {
+            createFilterCompanyMarketMenu().open(who)
+        }
+    }
+
+    private fun setupItemsButton(player: Player) {
+        val company = plugin.quickAccessCompanyByStafferUUID(player.uniqueId) ?: return setupVoidsButton(player)
 
         val button = buildItemStack(EMERALD) {
             displayName = "&fView Company&e ${company.name}"
 
-            lore = listOf(
-                    "&7Items Selling: &a${company.product.size}",
-                    "&7Employees: &a${company.staffer.size}",
-                    "",
-                    "&7Total Items Sold: &a${company.finance.account.values.sumBy { it.itemsSold }}",
-                    "&7Total Earnings: &a${company.finance.account.values.sumByDouble { it.playerPayout }.formatToTwoPlaces()}"
-                         )
+            lore = listOf("&7Items Selling: &a${company.product.size}",
+                          "&7Employees: &a${company.staffer.size}",
+                          "",
+                          "&7Total Items Sold: &a${company.finance.account.values.sumBy { it.itemsSold }}",
+                          "&7Total Earnings: &a${company.finance.account.values.sumByDouble { it.playerPayout }.formatToTwoPlaces()}")
         }
 
         this[Row.R_6, Col.C_9, button] = {
@@ -101,20 +140,20 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         }
     }
 
-    protected fun setupVoidedItems(player: Player) {
+    private fun setupVoidsButton(player: Player) {
         val staffer = plugin.quickAccessStaffer(player.uniqueId)?.takeIf { it.voidedItems.isNotEmpty() } ?: return
 
         val button = buildItemStack(STRUCTURE_VOID) {
             displayName = "&fView your voided items"
 
             lore = listOf(
-                    "&7Items Voided: &a${staffer.voidedItems.size}"
+                "&7Items Voided: &a${staffer.voidedItems.size}"
                          )
         }
 
         this[Row.R_6, Col.C_9, button] = {
             plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
-            createVoidedItemsMenu(staffer).open(who)
+            createCompanyVoidsMenu(staffer).open(who)
         }
     }
 
@@ -123,12 +162,17 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         return CompanyItemsMenu(company, this)
     }
 
-    private fun createChosenCompanyMarketMenu(company: Company): Menu {
-        return ChosenCompanyMarketMenu(plugin, company, this)
+    private fun createCompanyVoidsMenu(staffer: Staffer): Menu {
+        return CompanyVoidsMenu(plugin, staffer, this)
     }
 
-    private fun createVoidedItemsMenu(staffer: Staffer): Menu {
-        return CompanyVoidsMenu(plugin, staffer, this)
+
+    private fun createFilterCompanyMarketMenu(): Menu {
+        return FilterCompanyMarketMenu.Global(plugin, this)
+    }
+
+    private fun createChosenCompanyMarketMenu(company: Company): Menu {
+        return ChosenCompanyMarketMenu(plugin, company, this)
     }
 
 
@@ -136,9 +180,9 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         return buildItemStack(GRAY_STAINED_GLASS_PANE) {
             displayName = "&eSponsor Slot"
             lore = listOf(
-                    "",
-                    "&fBuy a sponsor slot for: &a${plugin.companyManager.sponsorManager.humanReadableTime()}",
-                    "&7Cost: &a$${plugin.companyManager.sponsorManager.slotCost.formatToTwoPlaces()}"
+                "",
+                "&fBuy a sponsor slot for: &a${plugin.companyManager.sponsorManager.humanReadableTime()}",
+                "&7Cost: &a$${plugin.companyManager.sponsorManager.slotCost.formatToTwoPlaces()}"
                          )
         }
     }
@@ -162,7 +206,16 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         private val sponsoredSlots: IntIterator
             get() = (0..8).iterator()
         private val companiesSlots: IntIterator
-            get() = (9..45).iterator()
+            get() = (9..44).iterator()
+
+
+        private val instances = mutableSetOf<GlobalCompanyMarketMenu>()
+
+        internal val refresher = PluginRunnable {
+            instances.forEach {
+                it.executions.forEach(UpdatingItemStack::update)
+            }
+        }
 
     }
 

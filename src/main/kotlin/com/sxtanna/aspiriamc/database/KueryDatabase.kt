@@ -7,11 +7,14 @@ import com.sxtanna.aspiriamc.config.Configs.COMPANY_COMMAND_TOP_MAX
 import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.DEF_KORM
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.exts.ensureUsable
+import com.sxtanna.aspiriamc.reports.Format
+import com.sxtanna.aspiriamc.reports.Report
 import com.sxtanna.db.Kuery
 import com.sxtanna.db.KueryTask
 import com.sxtanna.db.config.KueryConfig
 import com.sxtanna.db.ext.Big
 import com.sxtanna.db.ext.PrimaryKey
+import com.sxtanna.db.ext.Size
 import com.sxtanna.db.struct.Database
 import com.sxtanna.db.struct.Resolver
 import com.sxtanna.db.struct.base.Duplicate.Update
@@ -61,6 +64,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
             use(base)
             create(base.COMPANY)
             create(base.STAFFER)
+            create(base.REPORTS)
         }
     }
 
@@ -92,14 +96,8 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
     override fun saveCompany(data: Company, async: Boolean) {
         fun insert() = sql {
-            insert(base.COMPANY, Update(
-                    InDBCompany::name,
-                    InDBCompany::icon,
-                    InDBCompany::tariffs,
-                    InDBCompany::balance,
-                    InDBCompany::account,
-                    InDBCompany::staffer,
-                    InDBCompany::product),
+            insert(base.COMPANY,
+                   Update(InDBCompany::name, InDBCompany::icon, InDBCompany::tariffs, InDBCompany::balance, InDBCompany::account, InDBCompany::staffer, InDBCompany::product),
                    InDBCompany(data))
         }
 
@@ -147,10 +145,36 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
     }
 
     override fun saveStaffer(data: Staffer) = accessDB {
-        insert(base.STAFFER, Update(
-                InDBStaffer::companyUUID,
-                InDBStaffer::voidedItems),
+        insert(base.STAFFER,
+               Update(InDBStaffer::companyUUID, InDBStaffer::voidedItems),
                InDBStaffer(data))
+    }
+
+    override fun saveReport(report: Report) = accessDB {
+        insert(base.REPORTS, InDBReports(report))
+    }
+
+    override fun loadReport(format: Format, before: Long, returnSync: Boolean, onLoad: (List<Report>) -> Unit) = accessDB {
+        val (reports) = if (before == Long.MIN_VALUE) { // all of this format
+            select(base.REPORTS).where(InDBReports::format) {
+                it equals format
+            }
+        } else {
+            select(base.REPORTS)
+                    .where(InDBReports::format) {
+                        it equals format
+                    }
+                    .where(InDBReports::occurred) {
+                        it moreThanOrEquals before
+                    }
+        }
+
+        val value = reports.map(InDBReports::toData)
+
+        if (returnSync.not()) value.apply(onLoad)
+        else sync {
+            value.apply(onLoad)
+        }
     }
 
 
@@ -168,6 +192,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
         val COMPANY = table<InDBCompany>()
         val STAFFER = table<InDBStaffer>()
+        val REPORTS = table<InDBReports>()
 
     }
 
@@ -185,6 +210,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                                     val icon: Material,
 
                                     val tariffs: Int,
+                                    @Size(30, 2)
                                     val balance: Double,
 
                                     @Big
@@ -195,26 +221,26 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                                     val product: String)
         : InDBData<Company> {
         constructor(company: Company) : this(
-                company.uuid,
-                company.name,
-                company.icon,
-                company.finance.tariffs,
-                company.finance.balance,
-                DEF_KORM.push(company.finance.account),
-                DEF_KORM.push(company.staffer),
-                DEF_KORM.push(company.product))
+            company.uuid,
+            company.name,
+            company.icon,
+            company.finance.tariffs,
+            company.finance.balance,
+            DEF_KORM.push(company.finance.account),
+            DEF_KORM.push(company.staffer),
+            DEF_KORM.push(company.product))
 
 
         override fun toData(): Company {
             return Company().updateData(
-                    uuid,
-                    name,
-                    icon,
-                    tariffs,
-                    balance,
-                    DEF_KORM.pull(account).toHash(),
-                    DEF_KORM.pull(staffer).toList(),
-                    DEF_KORM.pull(product).toList())
+                uuid,
+                name,
+                icon,
+                tariffs,
+                balance,
+                DEF_KORM.pull(account).toHash(),
+                DEF_KORM.pull(staffer).toList(),
+                DEF_KORM.pull(product).toList())
         }
 
     }
@@ -227,16 +253,39 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                                     val voidedItems: String)
         : InDBData<Staffer> {
         constructor(staffer: Staffer) : this(
-                staffer.uuid,
-                staffer.companyUUID,
-                DEF_KORM.push(staffer.voidedItems))
+            staffer.uuid,
+            staffer.companyUUID,
+            DEF_KORM.push(staffer.voidedItems))
 
 
         override fun toData(): Staffer {
             return Staffer().updateData(
-                    uuid,
-                    if (companyUUID == Consts.DEF_UUID) null else companyUUID,
-                    DEF_KORM.pull(voidedItems).toList())
+                uuid,
+                if (companyUUID == Consts.DEF_UUID) null else companyUUID,
+                DEF_KORM.pull(voidedItems).toList())
+        }
+
+    }
+
+    internal data class InDBReports(@PrimaryKey
+                                    val uuid: UUID,
+                                    val format: Format,
+                                    val occurred: Long,
+                                    @Size(30, 2)
+                                    val amount: Double,
+                                    @Big
+                                    val data: String)
+        : InDBData<Report> {
+        constructor(report: Report) : this(
+            report.uuid,
+            report.format,
+            report.occurredAt,
+            report.amount,
+            DEF_KORM.push(report))
+
+
+        override fun toData(): Report {
+            return Report.Maker.make(DEF_KORM, data)
         }
 
     }

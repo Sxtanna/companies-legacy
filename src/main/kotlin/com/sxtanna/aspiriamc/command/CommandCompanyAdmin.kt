@@ -6,9 +6,13 @@ import com.sxtanna.aspiriamc.base.Result.None
 import com.sxtanna.aspiriamc.base.Result.Some
 import com.sxtanna.aspiriamc.command.base.CommandBase
 import com.sxtanna.aspiriamc.command.base.CommandContext
+import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
+import com.sxtanna.aspiriamc.company.menu.CompanyPastsMenu
+import com.sxtanna.aspiriamc.exts.properName
 import org.bukkit.entity.Player
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class CommandCompanyAdmin(override val plugin: Companies)
     : Command("companyadmin", "compadmin") {
@@ -17,7 +21,9 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
     init {
         register(CommandCompanySave())
+        register(CommandCompanyConfig())
         register(CommandCompanyAdminFix())
+        register(CommandCompanyPastPurchases())
     }
 
 
@@ -40,13 +46,13 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
     override fun CommandContext.complete(): List<String> {
         return when (input.size) {
-            0 -> {
+            0    -> {
                 subCommands.keys.toList()
             }
-            1 -> {
+            1    -> {
                 subCommands.keys.toList().filterApplicable(0)
             }
-            2 -> {
+            else -> {
                 val targetText = input.getOrNull(0) ?: return emptyList()
                 val targetBase = subCommands[targetText.toLowerCase()] ?: return emptyList()
 
@@ -58,9 +64,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
                     CommandContext(sender, targetText, input.drop(1)).complete()
                 }
             }
-            else -> {
-                emptyList()
-            }
+
         }
     }
 
@@ -80,7 +84,8 @@ class CommandCompanyAdmin(override val plugin: Companies)
             is Some -> {
                 block.invoke(stafferResult.data)
             }
-            is None -> { /* it's loading, or there's an error */ }
+            is None -> { /* it's loading, or there's an error */
+            }
         }
     }
 
@@ -158,6 +163,68 @@ class CommandCompanyAdmin(override val plugin: Companies)
                 }
                 else -> {
                     fail("does not need to be fixed")
+                }
+            }
+        }
+
+    }
+
+    inner class CommandCompanyConfig : CommandBase {
+
+        override val name = "config"
+
+
+        override fun CommandContext.evaluate() {
+
+        }
+
+        override fun CommandContext.complete(): List<String> {
+            return emptyList()
+        }
+
+    }
+
+    inner class CommandCompanyPastPurchases : CommandBase {
+
+        override val name = "past"
+
+
+        override fun CommandContext.evaluate() {
+            val player = notNull(getAsPlayer) {
+                "You must be a player to view reports"
+            }
+
+            val time = notNull(input.getOrNull(0)?.toLongOrNull()?.takeIf { it > 0 }) {
+                "you must provide a valid time"
+            }
+
+            val unit = notNull(input.getOrNull(1)?.let { data -> TimeUnit.values().find { it.name.equals(data, true) } }) {
+                "you must provide a valid unit"
+            }
+
+            val company = notNull(input.drop(2).joinToString(" ").let { plugin.companyManager.get(it) }) {
+                "you must provide a valid company"
+            }
+
+
+            plugin.reportsManager.purchasesFromPast(company, time, unit) {
+                CompanyPastsMenu(company, time, unit, it).open(player)
+            }
+        }
+
+        override fun CommandContext.complete(): List<String> {
+            return when (input.size) {
+                1    -> {
+                    (1..10).map { "$it" }
+                }
+                2    -> {
+                    TimeUnit.values().map { it.properName().toLowerCase() }.filterApplicable(1)
+                }
+                3    -> {
+                    plugin.companyManager.companies.map(Company::name).filterApplicable(2)
+                }
+                else -> {
+                    emptyList()
                 }
             }
         }

@@ -4,6 +4,7 @@ import com.sxtanna.aspiriamc.config.base.ConfigPath
 import com.sxtanna.aspiriamc.database.base.DatabaseType
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
+import java.util.concurrent.TimeUnit
 
 @Suppress("ClassName")
 sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
@@ -31,6 +32,27 @@ sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
 
         override fun value(yaml: ConfigurationSection): Double {
             return yaml.getDouble(path, 0.0).coerceAtLeast(0.0)
+        }
+
+    }
+
+
+    object COMPANY_HISTORY_TIME
+        : Configs<Long>("company.history-time") {
+
+        override fun value(yaml: ConfigurationSection): Long {
+            return yaml.getLong(path, 5L).coerceAtLeast(0L)
+        }
+
+    }
+
+    object COMPANY_HISTORY_UNIT
+        : Configs<TimeUnit>("company.history-unit") {
+
+        override fun value(yaml: ConfigurationSection): TimeUnit {
+            return yaml.getString(path, "DAYS").let { value ->
+                TimeUnit.values().find { it.name.equals(value, true) } ?: TimeUnit.DAYS
+            }
         }
 
     }

@@ -8,6 +8,7 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.config.Garnish.MARKET_PRODUCT_PURCHASE_FAIL
 import com.sxtanna.aspiriamc.config.Garnish.MARKET_PRODUCT_PURCHASE_PASS
 import com.sxtanna.aspiriamc.exts.base64ToItemStack
+import com.sxtanna.aspiriamc.exts.buildItemStack
 import com.sxtanna.aspiriamc.exts.inventoryCanHold
 import com.sxtanna.aspiriamc.exts.itemStackName
 import com.sxtanna.aspiriamc.market.Product
@@ -16,15 +17,13 @@ import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
 import com.sxtanna.aspiriamc.menu.impl.ConfirmationMenu
+import org.bukkit.Material.HOPPER
 import org.bukkit.entity.Player
 
 class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val prevMenu: Menu? = null) : Menu("&nMarketplace&r &l»&r ${company.name}", Row.R_6) {
 
     private val pagination = ChosenPagination()
 
-    init {
-        instances.computeIfAbsent(company) { mutableListOf() }.add(this)
-    }
 
     override fun build() {
         val itemSlots = productSlots
@@ -35,6 +34,9 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
             this[row, col, icon] = out@{
 
+                if (it.canNotBuyDecide) {
+                    return@out reply("&cfailed to purchase product: someone else is deciding on it")
+                }
                 if (it.stafferUUID == who.uniqueId) {
                     return@out reply("&cfailed to purchase product: you cannot purchase your own products")
                 }
@@ -43,15 +45,15 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
                     override fun passLore(): List<String> {
                         return listOf(
-                                "",
-                                "&7Buy &a${icon.itemMeta.displayName} &7for &a$${it.cost}"
+                            "",
+                            "&7Buy &a${icon.itemMeta.displayName} &7for &a$${it.cost}"
                                      )
                     }
 
                     override fun failLore(): List<String> {
                         return listOf(
-                                "",
-                                "&7Stop buying item"
+                            "",
+                            "&7Stop buying item"
                                      )
                     }
 
@@ -63,7 +65,7 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                                     who.inventory.addItem(item.data)
                                     company.product -= it
 
-                                    plugin.reportsManager.reportPurchase(it)
+                                    plugin.reportsManager.reportPurchase(it, who, item.data)
                                     plugin.garnishManager.send(who, MARKET_PRODUCT_PURCHASE_PASS)
 
                                     refreshInstances(company)
@@ -89,15 +91,23 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                         }
 
                         action.who.closeInventory()
+                        it.canNotBuyDecide = false
                     }
 
                     override fun onFail(action: MenuAction) {
                         this@ChosenCompanyMarketMenu.open(action.who)
+                        it.canNotBuyDecide = false
+                    }
+
+
+                    override fun onClose(player: Player) {
+                        it.canNotBuyDecide = false
                     }
 
                 }
 
 
+                it.canNotBuyDecide = true
                 confirmation.open(who)
             }
         }
@@ -111,8 +121,18 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
         pagination.push(companyProducts())
 
         super.fresh()
+
+        setupCompanyFilter()
     }
 
+
+    override fun open(player: Player) {
+        super.open(player)
+
+        setupCompanyFilter()
+
+        instances.computeIfAbsent(company) { mutableListOf() }.add(this)
+    }
 
     override fun onClose(player: Player) {
         val menus = instances[company] ?: return
@@ -125,8 +145,25 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
 
     private fun companyProducts(): List<List<Product>> {
-        return company.product.sortedWith(ProductSorter.ByDate).chunked(45).takeIf { it.isNotEmpty() }
-            ?: listOf(emptyList())
+        return company.product.sortedWith(ProductSorter.ByDate)
+                       .chunked(45)
+                       .takeIf {
+                           it.isNotEmpty()
+                       } ?: listOf(emptyList())
+    }
+
+    private fun setupCompanyFilter() {
+        val button = buildItemStack(HOPPER) {
+            displayName = "&fFilter items"
+        }
+
+        this[Row.R_6, Col.C_1, button] = {
+            createFilterCompanyMarketMenu().open(who)
+        }
+    }
+
+    private fun createFilterCompanyMarketMenu(): Menu {
+        return FilterCompanyMarketMenu.Chosen(plugin, company, this)
     }
 
 
@@ -153,7 +190,7 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
     private companion object {
 
         val productSlots: IntIterator
-            get() = (0..45).iterator()
+            get() = (0..44).iterator()
 
 
         val instances = mutableMapOf<Company, MutableList<ChosenCompanyMarketMenu>>()

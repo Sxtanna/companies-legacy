@@ -22,6 +22,8 @@ abstract class Command(final override val name: String, final override val alias
                 ex.printStackTrace()
             }
         }
+
+        plugin.reportsManager.reportException(ex)
     }
 
 
@@ -37,6 +39,11 @@ abstract class Command(final override val name: String, final override val alias
             val context = CommandContext(sender, alias, args.toList())
 
             try {
+                if (context.runnable().not()) {
+                    with(context) { reply("&cYou don't have permission to use this command") }
+                    return true
+                }
+
                 context.evaluate()
             } catch (ex: Exception) {
                 context.reportException(ex)
@@ -52,6 +59,7 @@ abstract class Command(final override val name: String, final override val alias
             } catch (ex: Exception) {
                 logger.severe("Failed to complete command: $name for ${sender.name} :")
                 ex.printStackTrace()
+                plugin.reportsManager.reportException(ex)
             }
 
             return mutableListOf()

@@ -56,30 +56,27 @@ class CommandCompany(override val plugin: Companies)
 
         register(CommandCompanyPayout())
         register(CommandCompanySponsor())
+        register(CommandCompanyWithdraw())
 
         loadCommandMessages()
     }
 
 
     override fun CommandContext.evaluate() {
-        val targetText = input.getOrNull(0) ?: return openCompanyMenu()
-        val targetBase = subCommands[targetText.toLowerCase()]
-                ?: return reply("&cSub-Command &7$targetText&c doesn't exist")
+        val text = input.getOrNull(0) ?: return openCompanyMenu()
+        val base = subCommands[text.toLowerCase()] ?: return reply("&cSub-Command &7$text&c doesn't exist")
 
-        if (sender.hasPermission(targetBase.perm).not()) {
-            return reply("&cYou don't have permission to use this command")
-        }
+        with(base) {
+            if (runnable().not()) {
+                return reply("&cYou don't have permission to use this command")
+            }
 
-        with(targetBase) {
-            CommandContext(sender, targetText, input.drop(1)).evaluate()
+            CommandContext(sender, text, input.drop(1)).evaluate()
         }
     }
 
     override fun CommandContext.complete(): List<String> {
         return when (input.size) {
-            0 -> {
-                subCommands.keys.toList()
-            }
             1 -> {
                 subCommands.keys.toList().filterApplicable(0)
             }
@@ -142,7 +139,7 @@ class CommandCompany(override val plugin: Companies)
 
     private fun CommandContext.quickAccessCompanyStaffers(): List<String> {
         val staffer = getAsPlayer?.uniqueId ?: return emptyList()
-        val company = plugin.quickAccessCompany(staffer) ?: return emptyList()
+        val company = plugin.quickAccessCompanyByStafferUUID(staffer) ?: return emptyList()
 
         return company.staffer.map(plugin.stafferManager.names::get)
     }
@@ -256,7 +253,7 @@ class CommandCompany(override val plugin: Companies)
             val pages = processPagination()
             return when (input.size) {
                 0, 1 -> {
-                    (0..pages.lastIndex).map { "${it + 1}" }
+                    (input.size..pages.lastIndex).map { "${it + 1}" }
                 }
                 else -> {
                     emptyList()
@@ -411,25 +408,20 @@ class CommandCompany(override val plugin: Companies)
                 return reply("failed to create company: you have voided items to claim")
             }
 
-            val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() }
-                    ?: return reply("you must define the name of the company!"))
+            val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() } ?: return reply("you must define the name of the company!"))
             val createFee = plugin.companyManager.createFee
 
 
             val confirmation = object : ConfirmationMenu("Company Creation Cost: &a$$createFee") {
 
                 override fun passLore(): List<String> {
-                    return listOf(
-                            "",
-                            "&7Create company '$inputName' for &a$$createFee"
-                    )
+                    return listOf("",
+                                  "&7Create company '$inputName' for &a$$createFee")
                 }
 
                 override fun failLore(): List<String> {
-                    return listOf(
-                            "",
-                            "&7Stop creating company"
-                    )
+                    return listOf("",
+                                  "&7Stop creating company")
                 }
 
 
@@ -440,6 +432,7 @@ class CommandCompany(override val plugin: Companies)
                             result.data.hire(staffer)
 
                             plugin.garnishManager.send(player, COMPANY_CREATE_PURCHASE_PASS)
+                            plugin.reportsManager.reportPurchaseComp(player, createFee, result.data)
                         }
                         is None -> {
                             reply("failed to create company: ${result.info}")
@@ -485,7 +478,7 @@ class CommandCompany(override val plugin: Companies)
                 }
 
                 val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() }
-                        ?: return@retrieveCompany reply("you must define the new name!"))
+                                          ?: return@retrieveCompany reply("you must define the new name!"))
                 val renameFee = plugin.companyManager.renameFee
 
                 val max = plugin.configsManager.get(COMPANY_COMMAND_NAME_MAX)
@@ -500,14 +493,14 @@ class CommandCompany(override val plugin: Companies)
                         return listOf(
                                 "",
                                 "&7Change company name from '${company.name}' to '$inputName'"
-                        )
+                                     )
                     }
 
                     override fun failLore(): List<String> {
                         return listOf(
                                 "",
                                 "&7Stop changing company name"
-                        )
+                                     )
                     }
 
 
@@ -553,8 +546,7 @@ class CommandCompany(override val plugin: Companies)
         }
 
         override fun CommandContext.complete(): List<String> {
-            val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList())
-                    ?: return emptyList()
+            val company = plugin.quickAccessCompanyByStafferUUID((sender as? Player)?.uniqueId ?: return emptyList()) ?: return emptyList()
             return onlinePlayers.filterNot(company::contains).map(Player::getName).filterApplicable(0)
         }
 
@@ -589,7 +581,7 @@ class CommandCompany(override val plugin: Companies)
                         reply("successfully sent hiring invitation to '${target.name}'")
 
                         reply("you've received a hiring request from &e${company.name}&r\n    &7execute &8'&f/company join ${company.name}&8'&r to accept", findPlayerByUUID(targetStaffer.uuid)
-                                ?: return)
+                            ?: return)
                     }
                     FAIL -> {
                         reply("failed to hire player '${target.name}', they have already been hired")
@@ -615,8 +607,7 @@ class CommandCompany(override val plugin: Companies)
         }
 
         override fun CommandContext.complete(): List<String> {
-            val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList())
-                    ?: return emptyList()
+            val company = plugin.quickAccessCompanyByStafferUUID((sender as? Player)?.uniqueId ?: return emptyList()) ?: return emptyList()
             return company.staffer.filterNot { it == sender.uniqueId }.map(plugin.stafferManager.names::get).filterApplicable(0)
         }
 
@@ -649,7 +640,7 @@ class CommandCompany(override val plugin: Companies)
                         reply("successfully fired employee $name")
 
                         reply("you have been fired from &e${company.name}&r", findPlayerByUUID(firedStaffer.uuid)
-                                ?: return)
+                            ?: return)
                     }
                     FAIL -> {
                         reply("failed to fire employee $name: they do not work for this company")
@@ -781,7 +772,7 @@ class CommandCompany(override val plugin: Companies)
                 plugin.hiringsManager.attemptStop(company, staffer)
 
                 reply("player &e${sender.name}&r has refused to join the company", findPlayerByUUID(company.staffer[0])
-                        ?: return)
+                    ?: return)
             }
 
 
@@ -827,8 +818,8 @@ class CommandCompany(override val plugin: Companies)
         }
 
         override fun CommandContext.complete(): List<String> {
-            val company = plugin.quickAccessCompany((sender as? Player)?.uniqueId ?: return emptyList())
-                    ?: return emptyList()
+            val company = plugin.quickAccessCompanyByStafferUUID((sender as? Player)?.uniqueId ?: return emptyList())
+                ?: return emptyList()
             return company.staffer.filterNot { it == sender.uniqueId }.map(plugin.stafferManager.names::get).filterApplicable(0)
         }
 
@@ -879,9 +870,6 @@ class CommandCompany(override val plugin: Companies)
 
         override fun CommandContext.complete(): List<String> {
             return when (input.size) {
-                0 -> {
-                    quickAccessCompanyStaffers()
-                }
                 1 -> {
                     quickAccessCompanyStaffers().filterApplicable(0)
                 }
@@ -998,22 +986,49 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("you must be the owner of the company to change the icon")
                 }
 
-                val item = player.inventory.itemInMainHand
-                        ?: return@retrieveCompany reply("you must be holding the item you want to use")
+                val item = player.inventory.itemInMainHand ?: return@retrieveCompany reply("you must be holding the item you want to use")
 
-                when (val result = plugin.economyHook.attemptTake(player, plugin.marketsManager.iconFee)) {
-                    is Some -> {
-                        company.icon = item.type
-                        reply("successfully changed your company's icon to: ${item.type.properName()}")
+                val iconFee = plugin.marketsManager.iconFee
 
-                        plugin.garnishManager.send(player, COMPANY_ICON_PURCHASE_PASS)
+                val confirmation = object : ConfirmationMenu("Company Icon Cost: &a$$iconFee") {
+
+                    override fun passLore(): List<String> {
+                        return listOf("",
+                                      "&7Change company icon to ${itemStackName(item)} for &a$$iconFee")
                     }
-                    is None -> {
-                        reply("failed to change company icon: ${result.info}")
 
-                        plugin.garnishManager.send(player, COMPANY_ICON_PURCHASE_FAIL)
+                    override fun failLore(): List<String> {
+                        return listOf("",
+                                      "&7Stop changing company icon")
                     }
+
+                    override fun onPass(action: MenuAction) {
+                        when (val result = plugin.economyHook.attemptTake(player, plugin.marketsManager.iconFee)) {
+                            is Some -> {
+                                plugin.reportsManager.reportPurchaseIcon(player, iconFee, company, company.icon, item.type)
+
+                                company.icon = item.type
+                                reply("successfully changed your company's icon to: ${item.type.properName()}")
+
+                                plugin.garnishManager.send(player, COMPANY_ICON_PURCHASE_PASS)
+                            }
+                            is None -> {
+                                reply("failed to change company icon: ${result.info}")
+
+                                plugin.garnishManager.send(player, COMPANY_ICON_PURCHASE_FAIL)
+                            }
+                        }
+
+                        action.who.closeInventory()
+                    }
+
+                    override fun onFail(action: MenuAction) {
+                        action.who.closeInventory()
+                    }
+
                 }
+
+                confirmation.open(player)
             }
         }
 
@@ -1051,11 +1066,16 @@ class CommandCompany(override val plugin: Companies)
 
                 player.inventory.itemInMainHand = null
 
-                company.product += Product().updateData(staffer, item, System.currentTimeMillis(), cost).apply {
+                val product = Product().updateData(staffer, item, System.currentTimeMillis(), cost).apply {
                     this.plugin = company.plugin
                 }
 
+                company.product += product
+
                 reply("now selling &e${if (item.type.maxStackSize == 1) "" else "${item.amount} "}${itemStackName(item)}&r for &a$$cost")
+
+
+                plugin.reportsManager.reportSellItem(player, product, company)
             }
         }
 
@@ -1094,6 +1114,53 @@ class CommandCompany(override val plugin: Companies)
                         reply("failed to purchase a sponsor slot: ${result.info}")
 
                         plugin.garnishManager.send(player, COMPANY_SPONSOR_PURCHASE_FAIL)
+                    }
+                }
+            }
+        }
+
+    }
+
+    inner class CommandCompanyWithdraw : CommandBase {
+
+        override val name = "withdraw"
+
+
+        override fun CommandContext.evaluate() {
+            retrieveStaffer("withdraw from your company!") { player, staffer ->
+                processWithdraw(player, staffer)
+            }
+        }
+
+        override fun CommandContext.complete(): List<String> {
+            return emptyList()
+        }
+
+
+        private fun CommandContext.processWithdraw(player: Player, staffer: Staffer) {
+            retrieveCompany(staffer) { company ->
+                if (company.isOwner(staffer.uuid).not()) {
+                    return@retrieveCompany reply("you must be the owner of the company to withdraw from the balance")
+                }
+
+                val inputs = notNull(input.getOrNull(0)) {
+                    "you must supply how much you want to withdraw"
+                }
+                val amount = notNull(inputs.toDoubleOrNull()) {
+                    "$inputs is not a valid number"
+                }
+
+                if (amount > company.finance.balance) {
+                    return@retrieveCompany reply("&a$$amount &7is greater than your company's balance of &a$${company.finance.balance}")
+                }
+
+                when(val deposit = plugin.economyHook.attemptGive(player, amount)) {
+                    is Some -> {
+                        company.finance.balance -= amount
+                        reply("&7successfully withdrawn &a$$amount")
+                    }
+                    is None -> {
+                        reply("&cfailed to withdraw &a$$amount&c: ${deposit.info}")
                     }
                 }
             }

@@ -5,20 +5,27 @@ import com.sxtanna.aspiriamc.base.Iconable
 import com.sxtanna.aspiriamc.base.Named
 import com.sxtanna.aspiriamc.base.Result.None
 import com.sxtanna.aspiriamc.base.Result.Some
+import com.sxtanna.aspiriamc.base.Searchable
+import com.sxtanna.aspiriamc.base.Searchable.Query
+import com.sxtanna.aspiriamc.base.Searchable.Query.*
+import com.sxtanna.aspiriamc.base.Searchable.Query.CostQuery.CostType.ABOVE
+import com.sxtanna.aspiriamc.base.Searchable.Query.CostQuery.CostType.BELOW
 import com.sxtanna.aspiriamc.base.Unique
 import com.sxtanna.aspiriamc.company.Staffer
-import com.sxtanna.aspiriamc.exts.base64ToItemStack
-import com.sxtanna.aspiriamc.exts.buildItemStack
-import com.sxtanna.aspiriamc.exts.itemStackName
-import com.sxtanna.aspiriamc.exts.itemStackToBase64
+import com.sxtanna.aspiriamc.exts.*
 import org.bukkit.Material.BARRIER
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Product : Named, Unique<UUID>, Iconable {
+class Product : Named, Unique<UUID>, Iconable, Searchable {
 
     @Transient
     internal lateinit var plugin: Companies
+
+    @Transient
+    internal var canNotBuyDecide = false
+    @Transient
+    internal var canNotBuyBought = false
 
 
     override var name = ""
@@ -28,6 +35,8 @@ class Product : Named, Unique<UUID>, Iconable {
 
 
     var stafferUUID: UUID? = null
+        internal set
+    var companyUUID: UUID? = null
         internal set
 
 
@@ -47,8 +56,10 @@ class Product : Named, Unique<UUID>, Iconable {
 
         this.date = date
         this.cost = cost
+        this.name = itemStackName(item)
 
         this.stafferUUID = staffer.uuid
+        this.companyUUID = staffer.companyUUID
 
         return this
     }
@@ -70,15 +81,62 @@ class Product : Named, Unique<UUID>, Iconable {
                 }
 
                 loreLines += listOf(
-                        "",
-                        "&8&m                       ",
-                        "&7Cost: &a$$cost",
-                        "&7Sold By: ${stafferUUID?.let(plugin.stafferManager.names::get) ?: "Unknown"}")
+                    "",
+                    "&8&m                       ",
+                    "&7Cost: &a$$cost",
+                    "&7Sold By: ${stafferUUID?.let(plugin.stafferManager.names::get) ?: "Unknown"}")
 
                 lore = loreLines
             }
             is None -> buildItemStack(BARRIER) {
                 displayName = "&4&lINVALID ITEM OMG SPOOKY"
+            }
+        }
+    }
+
+    override fun passes(query: Query): Boolean {
+        if (query.enabled.not()) {
+            return true
+        }
+
+        if (query is NameQuery && name.contains(query.name, true)) {
+            return true
+        }
+        if (query is CostQuery) {
+            return when (query.type) {
+                ABOVE -> {
+                    cost >= query.cost
+                }
+                BELOW -> {
+                    cost <= query.cost
+                }
+            }
+        }
+
+        val item = base64ToItemStack(base) as? Some<ItemStack> ?: return false
+
+        return when (query) {
+            is NameQuery -> {
+                item.data.type.name.contains(query.name, true)
+            }
+            is TypeQuery -> {
+                item.data.type == query.type
+            }
+            is DataQuery -> {
+                when (query) {
+                    is DataQuery.Count -> {
+                        item.data.amount == query.count
+                    }
+                    is DataQuery.Color -> {
+                        query.color?.let { itemStackIsColor(item.data, it) } ?: false
+                    }
+                    is DataQuery.Kinds -> {
+                        query.predicate.invoke(item.data.type)
+                    }
+                }
+            }
+            else         -> {
+                false
             }
         }
     }

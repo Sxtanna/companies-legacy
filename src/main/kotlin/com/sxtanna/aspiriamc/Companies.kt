@@ -4,9 +4,11 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.config.Configs.STORAGE_DATABASE_TYPE
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
+import com.sxtanna.aspiriamc.exts.TimChatMenuAPI
 import com.sxtanna.aspiriamc.hooks.EconomyHook
 import com.sxtanna.aspiriamc.manager.*
 import com.sxtanna.aspiriamc.manager.base.Manager
+import com.sxtanna.aspiriamc.market.menu.GlobalCompanyMarketMenu
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.korm.Korm
 import org.bukkit.entity.Player
@@ -30,9 +32,11 @@ class Companies : JavaPlugin() {
     lateinit var economyHook: EconomyHook
     lateinit var companyDatabase: CompanyDatabase
 
+
     lateinit var configsManager: ConfigsManager
     lateinit var garnishManager: GarnishManager
 
+    lateinit var messageManager: MessageManager
     lateinit var listensManager: ListensManager
     lateinit var commandManager: CommandManager
 
@@ -52,6 +56,7 @@ class Companies : JavaPlugin() {
         configsManager = ConfigsManager(this)
         garnishManager = GarnishManager(this)
 
+        messageManager = MessageManager(this)
         listensManager = ListensManager(this)
         commandManager = CommandManager(this)
 
@@ -64,7 +69,7 @@ class Companies : JavaPlugin() {
 
         companyDatabase = configsManager.get(STORAGE_DATABASE_TYPE).createDatabase(this)
 
-        managers += listOf(configsManager, garnishManager, listensManager, commandManager, marketsManager, stafferManager, hiringsManager, companyManager, reportsManager)
+        managers += listOf(configsManager, garnishManager, messageManager, listensManager, commandManager, marketsManager, stafferManager, hiringsManager, companyManager, reportsManager)
     }
 
     override fun onEnable() {
@@ -79,6 +84,7 @@ class Companies : JavaPlugin() {
         } catch (ex: Exception) {
             logger.severe("Failed to load the database: ${ex.message}")
             ex.printStackTrace()
+            reportsManager.reportException(ex)
 
             server.pluginManager.disablePlugin(this)
             return
@@ -94,10 +100,12 @@ class Companies : JavaPlugin() {
                 logger.severe("Failed to enable Manager:${it.name} =S=")
                 ex.printStackTrace()
                 logger.severe("Failed to enable Manager:${it.name} =E=")
+
+                reportsManager.reportException(ex)
             }
         }
 
-        server.pluginManager.registerEvents(MenuListener, this)
+        MenuListener.load(this)
     }
 
     override fun onDisable() {
@@ -111,10 +119,12 @@ class Companies : JavaPlugin() {
                 logger.severe("Failed to disable Manager:${it.name} =S=")
                 ex.printStackTrace()
                 logger.severe("Failed to disable Manager:${it.name} =E=")
+
+                reportsManager.reportException(ex)
             }
         }
 
-        HandlerList.unregisterAll(MenuListener)
+        MenuListener.kill()
     }
 
 
@@ -122,8 +132,12 @@ class Companies : JavaPlugin() {
         return stafferManager.cache[stafferUUID]
     }
 
-    internal fun quickAccessCompany(stafferUUID: UUID): Company? {
+    internal fun quickAccessCompanyByStafferUUID(stafferUUID: UUID): Company? {
         return companyManager.cache[quickAccessStaffer(stafferUUID)?.companyUUID ?: return null]
+    }
+
+    internal fun quickAccessCompanyByCompanyUUID(companyUUID: UUID?): Company? {
+        return companyManager.cache[companyUUID ?: return null]
     }
 
 
@@ -157,6 +171,19 @@ class Companies : JavaPlugin() {
             val menu = (inventory?.holder as? Menu) ?: return
 
             menu.onClose(player as Player)
+        }
+
+
+        internal fun load(plugin: Companies) {
+            plugin.server.pluginManager.registerEvents(MenuListener, plugin)
+            GlobalCompanyMarketMenu.refresher.runTaskTimer(plugin, 0L, 20L)
+            TimChatMenuAPI.init(plugin)
+        }
+
+        internal fun kill() {
+            HandlerList.unregisterAll(MenuListener)
+            GlobalCompanyMarketMenu.refresher.cancel()
+            TimChatMenuAPI.disable()
         }
 
     }

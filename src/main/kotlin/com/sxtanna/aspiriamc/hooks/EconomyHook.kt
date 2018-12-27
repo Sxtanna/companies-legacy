@@ -18,6 +18,8 @@ class EconomyHook(override val plugin: Companies) : PluginDependant {
         } catch (ex: Exception) {
             logger.severe("Vault dependency not found: ${ex.message}")
             ex.printStackTrace()
+
+            plugin.reportsManager.reportException(ex)
         }
 
         return economy != null

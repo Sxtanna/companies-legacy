@@ -5,6 +5,8 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.config.Configs.COMPANY_COMMAND_TOP_MAX
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
+import com.sxtanna.aspiriamc.reports.Format
+import com.sxtanna.aspiriamc.reports.Report
 import com.sxtanna.aspiriamc.store.FileStore
 import java.util.*
 
@@ -69,6 +71,14 @@ class LocalDatabase(override val plugin: Companies) : CompanyDatabase {
 
     override fun saveStaffer(data: Staffer) {
         stafferStore.save(data)
+    }
+
+    override fun saveReport(report: Report) {
+        TODO("not implemented")
+    }
+
+    override fun loadReport(format: Format, before: Long, returnSync: Boolean, onLoad: (List<Report>) -> Unit) {
+        TODO("not implemented")
     }
 
 }
