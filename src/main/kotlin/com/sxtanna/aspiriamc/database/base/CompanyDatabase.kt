@@ -5,7 +5,7 @@ import com.sxtanna.aspiriamc.base.PluginDependant
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.reports.Format
-import com.sxtanna.aspiriamc.reports.Report
+import com.sxtanna.aspiriamc.reports.Reports
 import java.util.*
 
 interface CompanyDatabase : Named, PluginDependant {
@@ -36,8 +36,8 @@ interface CompanyDatabase : Named, PluginDependant {
     fun loadStaffer(uuid: UUID, returnSync: Boolean = true, onLoad: (staffer: Staffer?) -> Unit)
 
 
-    fun saveReport(report: Report)
+    fun saveReports(data: Reports)
 
-    fun loadReport(format: Format, before: Long, returnSync: Boolean = true, onLoad: (List<Report>) -> Unit)
+    fun loadReports(format: Format, before: Long, returnSync: Boolean = true, onLoad: (List<Reports>) -> Unit)
 
 }

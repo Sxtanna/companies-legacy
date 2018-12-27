@@ -3,8 +3,8 @@ package com.sxtanna.aspiriamc.reports
 import com.sxtanna.aspiriamc.base.Result
 import com.sxtanna.aspiriamc.base.Unique
 import com.sxtanna.aspiriamc.reports.Format.*
-import com.sxtanna.aspiriamc.reports.Report.Codec
-import com.sxtanna.aspiriamc.reports.Report.Purchase.*
+import com.sxtanna.aspiriamc.reports.Reports.Codec
+import com.sxtanna.aspiriamc.reports.Reports.Purchase.*
 import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.KormPuller
 import com.sxtanna.korm.data.KormType
@@ -15,7 +15,7 @@ import java.time.Instant
 import java.util.*
 
 @KormCustomPull(Codec::class)
-sealed class Report : Unique<UUID> {
+sealed class Reports : Unique<UUID> {
 
     final override var uuid = UUID.randomUUID()
         private set
@@ -27,26 +27,26 @@ sealed class Report : Unique<UUID> {
     abstract val amount: Double
 
 
-    object None : Report() {
+    object None : Reports() {
 
         override val format = NONE
         override val amount = -1.0
 
     }
 
-    data class SellItem(override val amount: Double, val by: UUID, val idItem: UUID, val idComp: UUID) : Report() {
+    data class SellItem(override val amount: Double, val by: UUID, val idItem: UUID, val idComp: UUID) : Reports() {
 
         override val format = SELL_ITEM
 
     }
 
-    data class TakeItem(override val amount: Double, val to: UUID, val idItem: UUID, val idComp: UUID) : Report() {
+    data class TakeItem(override val amount: Double, val to: UUID, val idItem: UUID, val idComp: UUID) : Reports() {
 
         override val format = TAKE_ITEM
 
     }
 
-    sealed class Purchase : Report() {
+    sealed class Purchase : Reports() {
 
         data class Comp(override val amount: Double, val by: UUID, val idComp: UUID, val named: String) : Purchase() {
 
@@ -69,9 +69,9 @@ sealed class Report : Unique<UUID> {
     }
 
 
-    object Codec : KormPuller<Report> {
+    object Codec : KormPuller<Reports> {
 
-        override fun pull(reader: ReaderContext, types: MutableList<KormType>): Report? {
+        override fun pull(reader: ReaderContext, types: MutableList<KormType>): Reports? {
             return when (reader.mapData<Format>(types.byName("format")) ?: return null) {
                 NONE          -> {
                     return None
@@ -98,9 +98,9 @@ sealed class Report : Unique<UUID> {
 
     object Maker {
 
-        fun make(korm: Korm, text: String): Report {
+        fun make(korm: Korm, text: String): Reports {
             val reportResult = Result.of {
-                korm.pull(text).to<Report>()
+                korm.pull(text).to<Reports>()
             }
 
             return when (reportResult) {
@@ -108,7 +108,7 @@ sealed class Report : Unique<UUID> {
                     reportResult.data
                 }
                 is Result.None -> {
-                    return Report.None
+                    return Reports.None
                 }
             }
         }

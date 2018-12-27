@@ -8,7 +8,7 @@ import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.DEF_KORM
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.exts.ensureUsable
 import com.sxtanna.aspiriamc.reports.Format
-import com.sxtanna.aspiriamc.reports.Report
+import com.sxtanna.aspiriamc.reports.Reports
 import com.sxtanna.db.Kuery
 import com.sxtanna.db.KueryTask
 import com.sxtanna.db.config.KueryConfig
@@ -150,11 +150,11 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                InDBStaffer(data))
     }
 
-    override fun saveReport(report: Report) = accessDB {
-        insert(base.REPORTS, InDBReports(report))
+    override fun saveReports(data: Reports) = accessDB {
+        insert(base.REPORTS, InDBReports(data))
     }
 
-    override fun loadReport(format: Format, before: Long, returnSync: Boolean, onLoad: (List<Report>) -> Unit) = accessDB {
+    override fun loadReports(format: Format, before: Long, returnSync: Boolean, onLoad: (List<Reports>) -> Unit) = accessDB {
         val (reports) = if (before == Long.MIN_VALUE) { // all of this format
             select(base.REPORTS).where(InDBReports::format) {
                 it equals format
@@ -275,8 +275,8 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                                     val amount: Double,
                                     @Big
                                     val data: String)
-        : InDBData<Report> {
-        constructor(report: Report) : this(
+        : InDBData<Reports> {
+        constructor(report: Reports) : this(
             report.uuid,
             report.format,
             report.occurredAt,
@@ -284,8 +284,8 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
             DEF_KORM.push(report))
 
 
-        override fun toData(): Report {
-            return Report.Maker.make(DEF_KORM, data)
+        override fun toData(): Reports {
+            return Reports.Maker.make(DEF_KORM, data)
         }
 
     }

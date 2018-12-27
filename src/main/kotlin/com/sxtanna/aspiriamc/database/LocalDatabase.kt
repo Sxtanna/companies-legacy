@@ -6,7 +6,7 @@ import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.config.Configs.COMPANY_COMMAND_TOP_MAX
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.reports.Format
-import com.sxtanna.aspiriamc.reports.Report
+import com.sxtanna.aspiriamc.reports.Reports
 import com.sxtanna.aspiriamc.store.FileStore
 import java.util.*
 
@@ -14,10 +14,11 @@ class LocalDatabase(override val plugin: Companies) : CompanyDatabase {
 
     override val name = "Local"
 
-    private val root = pluginFolder.resolve("companies")
+    private val root = pluginFolder.resolve("companies-database")
 
     private val companyStore = FileStore(root.resolve("company"), Company::class)
     private val stafferStore = FileStore(root.resolve("staffer"), Staffer::class)
+    private val reportsStore = FileStore(root.resolve("reports"), Reports::class)
 
 
     override fun load() {
@@ -73,12 +74,19 @@ class LocalDatabase(override val plugin: Companies) : CompanyDatabase {
         stafferStore.save(data)
     }
 
-    override fun saveReport(report: Report) {
-        TODO("not implemented")
+    override fun saveReports(data: Reports) {
+        reportsStore.save(data)
     }
 
-    override fun loadReport(format: Format, before: Long, returnSync: Boolean, onLoad: (List<Report>) -> Unit) {
-        TODO("not implemented")
+    override fun loadReports(format: Format, before: Long, returnSync: Boolean, onLoad: (List<Reports>) -> Unit) {
+        async {
+            val values = reportsStore.loadAll().filter { it.format == format }.filter { it.occurredAt >= before }
+
+            if (returnSync.not()) values.apply(onLoad)
+            else sync {
+                values.apply(onLoad)
+            }
+        }
     }
 
 }

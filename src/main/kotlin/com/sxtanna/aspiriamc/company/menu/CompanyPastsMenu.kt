@@ -10,11 +10,11 @@ import com.sxtanna.aspiriamc.exts.properName
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
-import com.sxtanna.aspiriamc.reports.Report
+import com.sxtanna.aspiriamc.reports.Reports
 import org.bukkit.Material.STRUCTURE_VOID
 import java.util.concurrent.TimeUnit
 
-class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit, val reports: List<Report.Purchase.Item>, val prevMenu: Menu? = null) : Menu("&a${reports.size} &7Purchases", Row.R_6) {
+class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit, val reports: List<Reports.Purchase.Item>, val prevMenu: Menu? = null) : Menu("&a${reports.size} &7Purchases", Row.R_6) {
 
     private val pagination = ChosenPagination()
 
@@ -64,7 +64,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
     }
 
 
-    private fun companyPurchases(): List<List<Report.Purchase.Item>> {
+    private fun companyPurchases(): List<List<Reports.Purchase.Item>> {
         return reports.sortedBy { it.occurredAt }
                        .chunked(36)
                        .takeIf {
@@ -72,7 +72,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
                        } ?: listOf(emptyList())
     }
 
-    private fun transactionData(report: Report.Purchase.Item): Array<String> {
+    private fun transactionData(report: Reports.Purchase.Item): Array<String> {
         return report.transactions.map {
             val name = if (it.key == company.uuid) company.name else company.plugin.stafferManager.names[it.key]
             val data = it.value.formatToTwoPlaces()
@@ -82,7 +82,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
     }
 
 
-    inner class ChosenPagination : Pagination<List<Report.Purchase.Item>>(companyPurchases()) {
+    inner class ChosenPagination : Pagination<List<Reports.Purchase.Item>>(companyPurchases()) {
 
         override fun prevCoords() = Row.R_6 to Col.C_4
 
