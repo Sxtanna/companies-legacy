@@ -21,7 +21,13 @@ open class FileStore<T : Unique<I>, I : Any>(private val folder: File, private v
 
     override fun load(uuid: I): T? {
         return try {
-            korm.pull(getFileForData(uuid, false)).to(clazz)
+            val file = getFileForData(uuid, false)
+
+            if (file.exists().not()) {
+                return null
+            }
+
+            korm.pull(file).to(clazz)
         } catch (ignored: Exception) {
             null
         }
@@ -34,6 +40,10 @@ open class FileStore<T : Unique<I>, I : Any>(private val folder: File, private v
     }
 
     fun loadAll(): List<T> {
+        if (folder.exists().not()) {
+            return emptyList()
+        }
+
         return folder.listFiles().filter { it.isFile }.filter { it.extension.equals("korm", true) }.mapNotNull {
             try {
                 korm.pull(it).to(clazz)
