@@ -73,12 +73,25 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
     }
 
     private fun transactionData(report: Reports.Purchase.Item): Array<String> {
-        return report.transactions.map {
+        val transactions = report.transactions.entries.toList()
+
+        var data = transactions.take(3).map {
             val name = if (it.key == company.uuid) company.name else company.plugin.stafferManager.names[it.key]
             val data = it.value.formatToTwoPlaces()
 
             "&f$name: &a+$$data"
-        }.toTypedArray()
+        }
+
+        if (data.size < transactions.size && (transactions.size - data.size) > 1) {
+            val mutable = data.toMutableList()
+
+            mutable += ""
+            mutable +="&7and ${transactions.size - data.size} more..."
+
+            data = mutable
+        }
+
+        return data.toTypedArray()
     }
 
 
