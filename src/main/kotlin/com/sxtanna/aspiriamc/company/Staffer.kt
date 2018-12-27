@@ -25,6 +25,11 @@ class Staffer() : Unique<UUID> {
     }
 
 
+    override fun toString(): String {
+        return "Staffer(uuid=$uuid, companyUUID=$companyUUID, voidedItems=$voidedItems)"
+    }
+
+
     enum class AccountType {
 
         NEW,

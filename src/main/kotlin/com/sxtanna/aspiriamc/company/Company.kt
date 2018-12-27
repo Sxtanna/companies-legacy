@@ -209,7 +209,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
     }
 
     override fun toString(): String {
-        return name
+        return "Company(name='$name', uuid=$uuid, staffer=$staffer)"
     }
 
 
