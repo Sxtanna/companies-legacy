@@ -21,7 +21,7 @@ class StafferManager(override val plugin: Companies) : Manager("Staffers") {
 
     override fun enable() {
         plugin.listensManager.playerJoin {
-            load(player.uniqueId) { _, _ -> }
+            load(player.uniqueId)
 
             names.joinExec(player)
         }
