@@ -20,10 +20,10 @@ abstract class Command(final override val name: String, final override val alias
             else -> {
                 logger.severe("Failed to evaluate command: $name for ${sender.name} :")
                 ex.printStackTrace()
+
+                plugin.reportsManager.reportException(ex)
             }
         }
-
-        plugin.reportsManager.reportException(ex)
     }
 
 
@@ -59,6 +59,7 @@ abstract class Command(final override val name: String, final override val alias
             } catch (ex: Exception) {
                 logger.severe("Failed to complete command: $name for ${sender.name} :")
                 ex.printStackTrace()
+
                 plugin.reportsManager.reportException(ex)
             }
 
