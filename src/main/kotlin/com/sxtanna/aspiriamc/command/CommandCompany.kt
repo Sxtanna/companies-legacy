@@ -77,10 +77,10 @@ class CommandCompany(override val plugin: Companies)
 
     override fun CommandContext.complete(): List<String> {
         return when (input.size) {
-            1 -> {
+            1    -> {
                 subCommands.keys.toList().filterApplicable(0)
             }
-            2 -> {
+            2    -> {
                 val targetText = input.getOrNull(0) ?: return emptyList()
                 val targetBase = subCommands[targetText.toLowerCase()] ?: return emptyList()
 
@@ -478,7 +478,7 @@ class CommandCompany(override val plugin: Companies)
                 }
 
                 val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() }
-                                          ?: return@retrieveCompany reply("you must define the new name!"))
+                                      ?: return@retrieveCompany reply("you must define the new name!"))
                 val renameFee = plugin.companyManager.renameFee
 
                 val max = plugin.configsManager.get(COMPANY_COMMAND_NAME_MAX)
@@ -491,15 +491,15 @@ class CommandCompany(override val plugin: Companies)
 
                     override fun passLore(): List<String> {
                         return listOf(
-                                "",
-                                "&7Change company name from '${company.name}' to '$inputName'"
+                            "",
+                            "&7Change company name from '${company.name}' to '$inputName'"
                                      )
                     }
 
                     override fun failLore(): List<String> {
                         return listOf(
-                                "",
-                                "&7Stop changing company name"
+                            "",
+                            "&7Stop changing company name"
                                      )
                     }
 
@@ -581,7 +581,7 @@ class CommandCompany(override val plugin: Companies)
                         reply("successfully sent hiring invitation to '${target.name}'")
 
                         reply("you've received a hiring request from &e${company.name}&r\n    &7execute &8'&f/company join ${company.name}&8'&r to accept", findPlayerByUUID(targetStaffer.uuid)
-                            ?: return)
+                                                                                                                                                            ?: return)
                     }
                     FAIL -> {
                         reply("failed to hire player '${target.name}', they have already been hired")
@@ -640,7 +640,7 @@ class CommandCompany(override val plugin: Companies)
                         reply("successfully fired employee $name")
 
                         reply("you have been fired from &e${company.name}&r", findPlayerByUUID(firedStaffer.uuid)
-                            ?: return)
+                                                                              ?: return)
                     }
                     FAIL -> {
                         reply("failed to fire employee $name: they do not work for this company")
@@ -660,7 +660,7 @@ class CommandCompany(override val plugin: Companies)
 
 
         override fun CommandContext.evaluate() {
-            retrieveStaffer("manage a company!") { _, staffer ->
+            retrieveStaffer("resign from a company!") { _, staffer ->
                 processResignation(staffer)
             }
         }
@@ -676,13 +676,24 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("you cannot resign from your own company, use '/company give' to transfer it first")
                 }
 
-                company.fire(staffer)
+                when (val result = company.fire(staffer)) {
+                    is Some -> when (result.data) {
+                        PASS -> {
+                            reply("successfully resigned from &e${company.name}")
 
-                company.onlineStaffers().forEach {
-                    reply("player &e${sender.name}&r has resigned from the company", it)
+                            company.onlineStaffers().forEach {
+                                reply("player &e${sender.name}&r has resigned from the company", it)
+                            }
+                        }
+                        FAIL -> {
+
+                            reply("failed to resign: &4&nreport to admin pls")
+                        }
+                    }
+                    is None -> {
+                        reply("failed to resign: ${result.info}")
+                    }
                 }
-
-                reply("successfully resigned from &e${company.name}")
             }
         }
 
@@ -721,11 +732,11 @@ class CommandCompany(override val plugin: Companies)
 
             when (val hirings = plugin.hiringsManager.hirings(staffer)) {
                 is Some -> when (input.size) {
-                    0 -> when (val size = hirings.data.size) {
-                        0 -> {
+                    0    -> when (val size = hirings.data.size) {
+                        0    -> {
                             reply("You haven't been invited to join any companies")
                         }
-                        1 -> {
+                        1    -> {
                             joinCompany(hirings.data.first())
                         }
                         else -> {
@@ -772,17 +783,17 @@ class CommandCompany(override val plugin: Companies)
                 plugin.hiringsManager.attemptStop(company, staffer)
 
                 reply("player &e${sender.name}&r has refused to join the company", findPlayerByUUID(company.staffer[0])
-                    ?: return)
+                                                                                   ?: return)
             }
 
 
             when (val hirings = plugin.hiringsManager.hirings(staffer)) {
                 is Some -> when (input.size) {
-                    0 -> when (val size = hirings.data.size) {
-                        0 -> {
+                    0    -> when (val size = hirings.data.size) {
+                        0    -> {
                             reply("You haven't been invited to join any companies")
                         }
-                        1 -> {
+                        1    -> {
                             denyCompany(hirings.data.first())
                         }
                         else -> {
@@ -819,7 +830,7 @@ class CommandCompany(override val plugin: Companies)
 
         override fun CommandContext.complete(): List<String> {
             val company = plugin.quickAccessCompanyByStafferUUID((sender as? Player)?.uniqueId ?: return emptyList())
-                ?: return emptyList()
+                          ?: return emptyList()
             return company.staffer.filterNot { it == sender.uniqueId }.map(plugin.stafferManager.names::get).filterApplicable(0)
         }
 
@@ -870,7 +881,7 @@ class CommandCompany(override val plugin: Companies)
 
         override fun CommandContext.complete(): List<String> {
             return when (input.size) {
-                1 -> {
+                1    -> {
                     quickAccessCompanyStaffers().filterApplicable(0)
                 }
                 else -> {
@@ -1154,7 +1165,7 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("&a$$amount &7is greater than your company's balance of &a$${company.finance.balance}")
                 }
 
-                when(val deposit = plugin.economyHook.attemptGive(player, amount)) {
+                when (val deposit = plugin.economyHook.attemptGive(player, amount)) {
                     is Some -> {
                         company.finance.balance -= amount
                         reply("&7successfully withdrawn &a$$amount")
