@@ -1,13 +1,15 @@
 package com.sxtanna.aspiriamc.base
 
 import com.sxtanna.aspiriamc.base.Searchable.Query.CostQuery.CostType.ABOVE
+import com.sxtanna.aspiriamc.base.Searchable.Query.CostQuery.CostType.BELOW
 import com.sxtanna.aspiriamc.exts.buildItemStack
+import com.sxtanna.aspiriamc.exts.hideEverything
 import com.sxtanna.aspiriamc.exts.properName
 import org.bukkit.DyeColor
 import org.bukkit.Material
 import org.bukkit.Material.*
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.DAMAGE_ALL
-import org.bukkit.inventory.ItemFlag.*
 import org.bukkit.inventory.ItemStack
 
 interface Searchable {
@@ -23,7 +25,7 @@ interface Searchable {
         abstract fun createLore(): List<String>
 
 
-        data class NameQuery(var name: String)
+        data class NameQuery(var name: String = "")
             : Query() {
 
             override fun createLore(): List<String> {
@@ -33,14 +35,9 @@ interface Searchable {
 
             override fun createIcon(): ItemStack {
                 return buildItemStack(PAPER) {
-                    displayName = "&eName"
+                    hideEverything()
 
-                    addItemFlags(HIDE_ENCHANTS,
-                                 HIDE_ATTRIBUTES,
-                                 HIDE_UNBREAKABLE,
-                                 HIDE_DESTROYS,
-                                 HIDE_PLACED_ON,
-                                 HIDE_POTION_EFFECTS)
+                    displayName = "&eName"
 
                     if (enabled) {
                         addEnchant(DAMAGE_ALL, 1, true)
@@ -55,7 +52,7 @@ interface Searchable {
 
         }
 
-        data class CostQuery(var cost: Double, var type: CostType)
+        data class CostQuery(var cost: Double = -1.0, var type: CostType = BELOW)
             : Query() {
 
             override fun createLore(): List<String> {
@@ -65,14 +62,9 @@ interface Searchable {
 
             override fun createIcon(): ItemStack {
                 return buildItemStack(SUNFLOWER) {
-                    displayName = "&eCost"
+                    hideEverything()
 
-                    addItemFlags(HIDE_ENCHANTS,
-                                 HIDE_ATTRIBUTES,
-                                 HIDE_UNBREAKABLE,
-                                 HIDE_DESTROYS,
-                                 HIDE_PLACED_ON,
-                                 HIDE_POTION_EFFECTS)
+                    displayName = "&eCost"
 
                     if (enabled) {
                         addEnchant(DAMAGE_ALL, 1, true)
@@ -95,7 +87,7 @@ interface Searchable {
 
         }
 
-        data class TypeQuery(var type: Material)
+        data class TypeQuery(var type: Material = AIR)
             : Query() {
 
             override fun createLore(): List<String> {
@@ -105,14 +97,9 @@ interface Searchable {
 
             override fun createIcon(): ItemStack {
                 return buildItemStack(GRASS_BLOCK) {
-                    displayName = "&eType"
+                    hideEverything()
 
-                    addItemFlags(HIDE_ENCHANTS,
-                                 HIDE_ATTRIBUTES,
-                                 HIDE_UNBREAKABLE,
-                                 HIDE_DESTROYS,
-                                 HIDE_PLACED_ON,
-                                 HIDE_POTION_EFFECTS)
+                    displayName = "&eType"
 
                     if (enabled) {
                         addEnchant(DAMAGE_ALL, 1, true)
@@ -131,7 +118,7 @@ interface Searchable {
             : Query() {
 
 
-            data class Count(var count: Int)
+            data class Count(var count: Int = -1)
                 : DataQuery() {
 
                 override fun createLore(): List<String> {
@@ -141,14 +128,9 @@ interface Searchable {
 
                 override fun createIcon(): ItemStack {
                     return buildItemStack(MAP) {
-                        displayName = "&eCount"
+                        hideEverything()
 
-                        addItemFlags(HIDE_ENCHANTS,
-                                     HIDE_ATTRIBUTES,
-                                     HIDE_UNBREAKABLE,
-                                     HIDE_DESTROYS,
-                                     HIDE_PLACED_ON,
-                                     HIDE_POTION_EFFECTS)
+                        displayName = "&eCount"
 
                         if (enabled) {
                             addEnchant(DAMAGE_ALL, 1, true)
@@ -163,7 +145,7 @@ interface Searchable {
 
             }
 
-            data class Color(var color: DyeColor?)
+            data class Color(var color: DyeColor? = null)
                 : DataQuery() {
 
                 override fun createLore(): List<String> {
@@ -182,14 +164,9 @@ interface Searchable {
                     }
 
                     return buildItemStack(type) {
-                        displayName = "&eColor"
+                        hideEverything()
 
-                        addItemFlags(HIDE_ENCHANTS,
-                                     HIDE_ATTRIBUTES,
-                                     HIDE_UNBREAKABLE,
-                                     HIDE_DESTROYS,
-                                     HIDE_PLACED_ON,
-                                     HIDE_POTION_EFFECTS)
+                        displayName = "&eColor"
 
                         if (enabled) {
                             addEnchant(DAMAGE_ALL, 1, true)
@@ -198,6 +175,63 @@ interface Searchable {
                         if (type != FIREWORK_STAR) {
                             lore = listOf("",
                                           "&f${color?.properName() ?: "Unknown"}")
+                        }
+                    }
+                }
+
+            }
+
+            data class Chant(val chant: MutableMap<Enchantment, Int> = mutableMapOf())
+                : DataQuery() {
+
+                override fun createLore(): List<String> {
+                    return listOf("&6Enchantments",
+                                  *enchantmentLines().drop(1).map { "  $it" }.toTypedArray())
+                }
+
+                override fun createIcon(): ItemStack {
+                    return buildItemStack(ENCHANTING_TABLE) {
+                        hideEverything()
+
+                        displayName = "&eEnchantments"
+
+                        if (enabled) {
+                            addEnchant(DAMAGE_ALL, 1, true)
+
+                            lore = listOf(*enchantmentLines().toTypedArray())
+                        }
+                    }
+                }
+
+
+                private fun enchantmentLines(): List<String> {
+                    val lines = mutableListOf("")
+
+                    if (chant.isEmpty()) return lines
+
+                    chant.forEach { chant, level ->
+                        lines += "&7${chant.properName()}: &a$level"
+                    }
+
+                    return lines
+                }
+
+
+                fun createIconFor(enchantment: Enchantment): ItemStack {
+                    return buildItemStack(ENCHANTED_BOOK) {
+                        hideEverything()
+
+                        displayName = "&e${enchantment.properName()}"
+
+                        val level = chant[enchantment] ?: 0
+
+
+                        if (enchantment.maxLevel == 1) {
+                            lore = listOf("",
+                                          if (level == 1) "  &aEnabled" else "  &cDisabled")
+                        } else if (level > 0) {
+                            lore = listOf("",
+                                          "  &a$level")
                         }
                     }
                 }
@@ -221,14 +255,9 @@ interface Searchable {
 
                     override fun createIcon(): ItemStack {
                         return buildItemStack(STONE) {
-                            displayName = "&eIs Block"
+                            hideEverything()
 
-                            addItemFlags(HIDE_ENCHANTS,
-                                         HIDE_ATTRIBUTES,
-                                         HIDE_UNBREAKABLE,
-                                         HIDE_DESTROYS,
-                                         HIDE_PLACED_ON,
-                                         HIDE_POTION_EFFECTS)
+                            displayName = "&eIs Block"
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -248,14 +277,9 @@ interface Searchable {
 
                     override fun createIcon(): ItemStack {
                         return buildItemStack(STICK) {
-                            displayName = "&eIs Item"
+                            hideEverything()
 
-                            addItemFlags(HIDE_ENCHANTS,
-                                         HIDE_ATTRIBUTES,
-                                         HIDE_UNBREAKABLE,
-                                         HIDE_DESTROYS,
-                                         HIDE_PLACED_ON,
-                                         HIDE_POTION_EFFECTS)
+                            displayName = "&eIs Item"
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -273,14 +297,9 @@ interface Searchable {
 
                     override fun createIcon(): ItemStack {
                         return buildItemStack(COOKED_BEEF) {
-                            displayName = "&eIs Edible"
+                            hideEverything()
 
-                            addItemFlags(HIDE_ENCHANTS,
-                                         HIDE_ATTRIBUTES,
-                                         HIDE_UNBREAKABLE,
-                                         HIDE_DESTROYS,
-                                         HIDE_PLACED_ON,
-                                         HIDE_POTION_EFFECTS)
+                            displayName = "&eIs Edible"
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -298,14 +317,9 @@ interface Searchable {
 
                     override fun createIcon(): ItemStack {
                         return buildItemStack(COAL) {
-                            displayName = "&eIs Fuel"
+                            hideEverything()
 
-                            addItemFlags(HIDE_ENCHANTS,
-                                         HIDE_ATTRIBUTES,
-                                         HIDE_UNBREAKABLE,
-                                         HIDE_DESTROYS,
-                                         HIDE_PLACED_ON,
-                                         HIDE_POTION_EFFECTS)
+                            displayName = "&eIs Fuel"
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -323,14 +337,9 @@ interface Searchable {
 
                     override fun createIcon(): ItemStack {
                         return buildItemStack(MUSIC_DISC_STAL) {
-                            displayName = "&eIs Music Disc"
+                            hideEverything()
 
-                            addItemFlags(HIDE_ENCHANTS,
-                                         HIDE_ATTRIBUTES,
-                                         HIDE_UNBREAKABLE,
-                                         HIDE_DESTROYS,
-                                         HIDE_PLACED_ON,
-                                         HIDE_POTION_EFFECTS)
+                            displayName = "&eIs Music Disc"
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -343,7 +352,6 @@ interface Searchable {
             }
 
         }
-
 
     }
 

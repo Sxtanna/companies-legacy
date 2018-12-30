@@ -30,19 +30,20 @@ import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemFlag.*
+import org.bukkit.inventory.ItemStack
 
 sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&r $target", Row.R_6), PluginDependant {
 
     protected val queries = mutableListOf<Query>()
 
 
-    private val name = Query.NameQuery("")
-    private val type = Query.TypeQuery(AIR)
-    private val cost = Query.CostQuery(-1.0, BELOW)
+    private val name = Query.NameQuery()
+    private val type = Query.TypeQuery()
+    private val cost = Query.CostQuery()
 
-    private val count = Query.DataQuery.Count(-1)
-    private val color = Query.DataQuery.Color(null)
+    private val count = Query.DataQuery.Count()
+    private val color = Query.DataQuery.Color()
+    private val chant = Query.DataQuery.Chant()
 
     private val isBlock = Query.DataQuery.Kinds.IsBlock()
     private val isFoods = Query.DataQuery.Kinds.IsFoods()
@@ -58,6 +59,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
         queries += count
         queries += color
+        queries += chant
 
         queries += isBlock
         queries += isFoods
@@ -92,14 +94,9 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
         }
 
         val kinds = buildItemStack(COMMAND_BLOCK) {
-            displayName = "&eItem Options"
+            hideEverything()
 
-            addItemFlags(HIDE_ENCHANTS,
-                         HIDE_ATTRIBUTES,
-                         HIDE_UNBREAKABLE,
-                         HIDE_DESTROYS,
-                         HIDE_PLACED_ON,
-                         HIDE_POTION_EFFECTS)
+            displayName = "&eItem Options"
 
             val kinds = queries.filterIsInstance<Kinds>().filter(Query::enabled)
 
@@ -114,6 +111,10 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
         this[Row.R_2, Col.C_8, kinds] = {
             KindsSelectionMenu(plugin).open(who)
         }
+
+        this[Row.R_3, Col.C_8, chant.createIcon()] = {
+            ChantSelectionMenu(plugin).open(who)
+        }
     }
 
 
@@ -124,14 +125,9 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
         var runnable = false
 
         val execButton = buildItemStack(EMERALD_BLOCK) {
-            displayName = "&fExecute filter"
+            hideEverything()
 
-            addItemFlags(HIDE_ENCHANTS,
-                         HIDE_ATTRIBUTES,
-                         HIDE_UNBREAKABLE,
-                         HIDE_DESTROYS,
-                         HIDE_PLACED_ON,
-                         HIDE_POTION_EFFECTS)
+            displayName = "&fExecute filter"
 
             val enabled = queries.filter(Query::enabled)
 
@@ -147,8 +143,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
         this[Row.R_5, Col.C_5, execButton] = {
             if (runnable.not()) {
                 // fail sound?
-            }
-            else {
+            } else {
                 executeSearch(who)
                 plugin.garnishManager.send(who, MENU_BUTTON_BACK)
             }
@@ -156,7 +151,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
     }
 
 
-    class Global(override val plugin: Companies, val prevMenu: Menu? = null) : FilterCompanyMarketMenu("All Companies") {
+    class Global(override val plugin: Companies, private val prevMenu: Menu? = null) : FilterCompanyMarketMenu("All Companies") {
 
         override fun build() {
             super.build()
@@ -180,7 +175,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
     }
 
-    class Chosen(override val plugin: Companies, val company: Company, val prevMenu: Menu? = null) : FilterCompanyMarketMenu(company.name) {
+    class Chosen(override val plugin: Companies, val company: Company, private val prevMenu: Menu? = null) : FilterCompanyMarketMenu(company.name) {
 
         override fun build() {
             super.build()
@@ -202,7 +197,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
     }
 
-    class Output(override val plugin: Companies, private val products: MutableList<Product>, val prevMenu: Menu? = null) : Menu("&a${products.size}&7 Results", Row.R_6), PluginDependant {
+    class Output(override val plugin: Companies, private val products: MutableList<Product>, private val prevMenu: Menu? = null) : Menu("&a${products.size}&7 Results", Row.R_6), PluginDependant {
 
         private val pagination = ChosenPagination()
 
@@ -407,14 +402,9 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
                 val (row, col) = slotToGrid(itemSlots.nextInt())
 
                 val icon = buildItemStack(it) {
-                    displayName = "&f${it.properName()}"
+                    hideEverything()
 
-                    addItemFlags(HIDE_ENCHANTS,
-                                 HIDE_ATTRIBUTES,
-                                 HIDE_UNBREAKABLE,
-                                 HIDE_DESTROYS,
-                                 HIDE_PLACED_ON,
-                                 HIDE_POTION_EFFECTS)
+                    displayName = "&f${it.properName()}"
                 }
 
                 this[row, col, icon] = {
@@ -673,21 +663,21 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
         }
 
         override fun open(player: Player) {
-            super.open(player)
-
             if (count.count == -1) {
                 count.count = 1
             }
+
+            super.open(player)
         }
 
         private fun refreshDisplay() {
             val display = buildItemStack(STONE, count.count.coerceIn(1, 64)) {
                 displayName = "&fCurrent"
+                lore = listOf("  &a${count.count}")
             }
 
             this[Row.R_1, Col.C_5, display] = {}
         }
-
 
     }
 
@@ -753,6 +743,406 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
                 plugin.garnishManager.send(who, MENU_BUTTON_BACK)
             }
+        }
+
+    }
+
+
+    inner class ChantSelectionMenu(val plugin: Companies) : Menu("&nSelect The Enchantments", Row.R_6) {
+
+        private val tool = ToolTypeMenu()
+        private val rods = RodsTypeMenu()
+
+        private val head = HeadTypeMenu()
+        private val body = BodyTypeMenu()
+        private val feet = FeetTypeMenu()
+
+        private val weap = WeapTypeMenu()
+        private val bows = BowsTypeMenu()
+        private val trid = TridTypeMenu()
+
+        private val misc = MiscTypeMenu()
+
+
+        override fun build() {
+            createTypeButton(Row.R_2, Col.C_2, tool)
+            createTypeButton(Row.R_3, Col.C_2, rods)
+
+            createTypeButton(Row.R_2, Col.C_4, head)
+            createTypeButton(Row.R_3, Col.C_4, body)
+            createTypeButton(Row.R_4, Col.C_4, feet)
+
+            createTypeButton(Row.R_2, Col.C_6, weap)
+            createTypeButton(Row.R_3, Col.C_6, bows)
+            createTypeButton(Row.R_4, Col.C_6, trid)
+
+            createTypeButton(Row.R_2, Col.C_8, misc)
+
+            initBackButton(this@FilterCompanyMarketMenu, plugin, Row.R_6, Col.C_5)
+
+            val clearItem = buildItemStack(REDSTONE_BLOCK) {
+                displayName = "&cReset to nothing"
+            }
+
+            this[Row.R_6, Col.C_1, clearItem] = {
+                chant.chant.clear()
+                chant.enabled = false
+
+                this@FilterCompanyMarketMenu.open(who)
+                this@FilterCompanyMarketMenu.fresh()
+
+                plugin.garnishManager.send(who, MENU_BUTTON_BACK)
+            }
+        }
+
+
+        private fun createTypeButton(row: Row, col: Col, typeMenu: ChantTypeMenu) {
+            this[row, col, typeMenu.createIcon()] = {
+                typeMenu.open(who)
+            }
+        }
+
+
+        abstract inner class ChantTypeMenu(type: String, rows: Row) : Menu("&n$type Enchantments", rows) {
+
+            abstract override fun build()
+
+            abstract fun createIcon(): ItemStack
+
+
+            protected fun createEnchantButton(row: Row, col: Col, enchantment: Enchantment) {
+                this[row, col, chant.createIconFor(enchantment)] = {
+                    executeChantClick(enchantment, who)
+                }
+            }
+
+            protected fun createTypeIcon(type: Material, name: String, vararg enchantments: Enchantment): ItemStack {
+                return buildItemStack(type) {
+                    hideEverything()
+
+                    displayName = "&e$name"
+
+                    val loreLines = loreLinesFor(*enchantments)
+
+                    if (loreLines.isNotEmpty()) {
+                        lore = loreLines
+
+                        addEnchant(Enchantment.DAMAGE_ALL, 1, true)
+                    }
+                }
+            }
+
+            protected fun initNoneButton(menu: Menu, row: Row, col: Col, vararg enchantments: Enchantment) {
+                val clearItem = buildItemStack(REDSTONE_BLOCK) {
+                    displayName = "&cReset to nothing"
+                }
+
+                this[row, col, clearItem] = {
+                    enchantments.forEach {
+                        chant.chant -= it
+                    }
+
+                    chant.enabled = chant.chant.isNotEmpty()
+
+                    menu.open(who)
+                    menu.fresh()
+
+                    plugin.garnishManager.send(who, MENU_BUTTON_BACK)
+                }
+            }
+
+            private fun executeChantClick(enchantment: Enchantment, player: Player) {
+                if (enchantment.maxLevel > 1) {
+                    return ChantLevelMenu(enchantment, this).open(player)
+                }
+
+                if (chant.chant.remove(enchantment) == null) {
+                    chant.chant[enchantment] = 1
+                }
+
+                chant.enabled = chant.chant.isNotEmpty()
+
+                fresh()
+            }
+
+            private fun loreLinesFor(vararg enchantments: Enchantment): List<String> {
+                val levels = enchantments.associate { it to chant.chant[it] }.mapNotNull { data ->
+                    data.value?.takeIf { it > 0 }?.let {
+                        data.key to it
+                    }
+                }
+
+                return if (levels.isEmpty()) {
+                    emptyList()
+                } else {
+                    listOf("",
+                           *levels.map { "&7${it.first.properName()}: &a${it.second}" }.toTypedArray())
+                }
+            }
+
+        }
+
+
+        inner class ToolTypeMenu : ChantTypeMenu("Tool", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_3, Enchantment.SILK_TOUCH)
+                createEnchantButton(Row.R_2, Col.C_5, Enchantment.DIG_SPEED)
+                createEnchantButton(Row.R_2, Col.C_7, Enchantment.LOOT_BONUS_BLOCKS)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9, Enchantment.SILK_TOUCH, Enchantment.DIG_SPEED, Enchantment.LOOT_BONUS_BLOCKS)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(DIAMOND_PICKAXE, "Tools", Enchantment.SILK_TOUCH, Enchantment.DIG_SPEED, Enchantment.LOOT_BONUS_BLOCKS)
+            }
+
+        }
+
+        inner class RodsTypeMenu : ChantTypeMenu("Fishing Rod", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_4, Enchantment.LURE)
+                createEnchantButton(Row.R_2, Col.C_6, Enchantment.LUCK)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9, Enchantment.LURE, Enchantment.LUCK)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(FISHING_ROD, "Fishing Rods", Enchantment.LURE, Enchantment.LUCK)
+            }
+
+        }
+
+
+        inner class HeadTypeMenu : ChantTypeMenu("Helmet", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_4, Enchantment.WATER_WORKER)
+                createEnchantButton(Row.R_2, Col.C_6, Enchantment.OXYGEN)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9, Enchantment.WATER_WORKER, Enchantment.OXYGEN)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(DIAMOND_HELMET, "Helmets", Enchantment.WATER_WORKER, Enchantment.OXYGEN)
+            }
+
+        }
+
+        inner class BodyTypeMenu : ChantTypeMenu("Armor", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_2, Enchantment.PROTECTION_ENVIRONMENTAL)
+
+                createEnchantButton(Row.R_2, Col.C_4, Enchantment.PROTECTION_FIRE)
+                createEnchantButton(Row.R_2, Col.C_5, Enchantment.PROTECTION_EXPLOSIONS)
+                createEnchantButton(Row.R_2, Col.C_6, Enchantment.PROTECTION_PROJECTILE)
+
+                createEnchantButton(Row.R_2, Col.C_8, Enchantment.THORNS)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9,
+                               Enchantment.PROTECTION_ENVIRONMENTAL,
+                               Enchantment.PROTECTION_FIRE,
+                               Enchantment.PROTECTION_EXPLOSIONS,
+                               Enchantment.PROTECTION_PROJECTILE,
+                               Enchantment.THORNS)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(DIAMOND_CHESTPLATE, "Armor",
+                                      Enchantment.PROTECTION_ENVIRONMENTAL,
+                                      Enchantment.PROTECTION_FIRE,
+                                      Enchantment.PROTECTION_EXPLOSIONS,
+                                      Enchantment.PROTECTION_PROJECTILE,
+                                      Enchantment.THORNS)
+            }
+
+        }
+
+        inner class FeetTypeMenu : ChantTypeMenu("Boots", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_3, Enchantment.PROTECTION_FALL)
+                createEnchantButton(Row.R_2, Col.C_5, Enchantment.DEPTH_STRIDER)
+                createEnchantButton(Row.R_2, Col.C_7, Enchantment.FROST_WALKER)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9, Enchantment.PROTECTION_FALL, Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(DIAMOND_PICKAXE, "Boots", Enchantment.PROTECTION_FALL, Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER)
+            }
+
+        }
+
+
+        inner class WeapTypeMenu : ChantTypeMenu("Weapon", Row.R_4) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_2, Enchantment.DAMAGE_ALL)
+
+                createEnchantButton(Row.R_2, Col.C_4, Enchantment.DAMAGE_UNDEAD)
+                createEnchantButton(Row.R_3, Col.C_4, Enchantment.DAMAGE_ARTHROPODS)
+
+                createEnchantButton(Row.R_2, Col.C_6, Enchantment.FIRE_ASPECT)
+                createEnchantButton(Row.R_3, Col.C_6, Enchantment.SWEEPING_EDGE)
+
+                createEnchantButton(Row.R_2, Col.C_8, Enchantment.LOOT_BONUS_MOBS)
+                createEnchantButton(Row.R_3, Col.C_8, Enchantment.KNOCKBACK)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_4, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_4, Col.C_9,
+                               Enchantment.DAMAGE_ALL,
+                               Enchantment.DAMAGE_UNDEAD,
+                               Enchantment.DAMAGE_ARTHROPODS,
+                               Enchantment.FIRE_ASPECT,
+                               Enchantment.SWEEPING_EDGE,
+                               Enchantment.LOOT_BONUS_MOBS,
+                               Enchantment.KNOCKBACK)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(DIAMOND_SWORD, "Weapons",
+                                      Enchantment.DAMAGE_ALL,
+                                      Enchantment.DAMAGE_UNDEAD,
+                                      Enchantment.DAMAGE_ARTHROPODS,
+                                      Enchantment.FIRE_ASPECT,
+                                      Enchantment.SWEEPING_EDGE,
+                                      Enchantment.LOOT_BONUS_MOBS,
+                                      Enchantment.KNOCKBACK)
+            }
+
+        }
+
+        inner class BowsTypeMenu : ChantTypeMenu("Bow", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_2, Enchantment.ARROW_DAMAGE)
+                createEnchantButton(Row.R_2, Col.C_4, Enchantment.ARROW_KNOCKBACK)
+                createEnchantButton(Row.R_2, Col.C_6, Enchantment.ARROW_FIRE)
+                createEnchantButton(Row.R_2, Col.C_8, Enchantment.ARROW_INFINITE)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9, Enchantment.ARROW_DAMAGE, Enchantment.ARROW_KNOCKBACK, Enchantment.ARROW_FIRE, Enchantment.ARROW_INFINITE)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(BOW, "Bows", Enchantment.ARROW_DAMAGE, Enchantment.ARROW_KNOCKBACK, Enchantment.ARROW_FIRE, Enchantment.ARROW_INFINITE)
+            }
+
+        }
+
+        inner class TridTypeMenu : ChantTypeMenu("Trident", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_2, Enchantment.IMPALING)
+                createEnchantButton(Row.R_2, Col.C_4, Enchantment.LOYALTY)
+                createEnchantButton(Row.R_2, Col.C_6, Enchantment.RIPTIDE)
+                createEnchantButton(Row.R_2, Col.C_8, Enchantment.CHANNELING)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9, Enchantment.IMPALING, Enchantment.LOYALTY, Enchantment.RIPTIDE, Enchantment.CHANNELING)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(TRIDENT, "Tridents", Enchantment.IMPALING, Enchantment.LOYALTY, Enchantment.RIPTIDE, Enchantment.CHANNELING)
+            }
+
+        }
+
+
+        inner class MiscTypeMenu : ChantTypeMenu("Misc", Row.R_3) {
+
+            override fun build() {
+                createEnchantButton(Row.R_2, Col.C_2, Enchantment.DURABILITY)
+                createEnchantButton(Row.R_2, Col.C_4, Enchantment.MENDING)
+                createEnchantButton(Row.R_2, Col.C_6, Enchantment.BINDING_CURSE)
+                createEnchantButton(Row.R_2, Col.C_8, Enchantment.VANISHING_CURSE)
+
+                initBackButton(this@ChantSelectionMenu, plugin, Row.R_3, Col.C_1)
+                initNoneButton(this@ChantSelectionMenu, Row.R_3, Col.C_9, Enchantment.DURABILITY, Enchantment.MENDING, Enchantment.BINDING_CURSE, Enchantment.VANISHING_CURSE)
+            }
+
+            override fun createIcon(): ItemStack {
+                return createTypeIcon(COMMAND_BLOCK, "Miscellaneous", Enchantment.DURABILITY, Enchantment.MENDING, Enchantment.BINDING_CURSE, Enchantment.VANISHING_CURSE)
+            }
+
+        }
+
+    }
+
+    inner class ChantLevelMenu(private val enchantment: Enchantment, private val prevMenu: Menu? = null) : Menu("&nLevel of ${enchantment.properName()}", Row.R_3) {
+
+        override fun build() {
+            refreshDisplay()
+
+            val decrease = buildItemStack(RED_WOOL) {
+                displayName = "&fDecrease Level"
+            }
+            val increase = buildItemStack(GREEN_WOOL) {
+                displayName = "&fIncrease Level"
+            }
+
+            this[Row.R_2, Col.C_4, decrease] = {
+                chant.chant.compute(enchantment) { _, level ->
+                    ((level ?: 1) - 1).coerceAtLeast(1)
+                }
+                refreshDisplay()
+            }
+            this[Row.R_2, Col.C_6, increase] = {
+                chant.chant.compute(enchantment) { _, level ->
+                    ((level ?: 1) + 1).coerceAtMost(enchantment.maxLevel)
+                }
+                refreshDisplay()
+            }
+
+            val cancel = buildItemStack(REDSTONE_BLOCK) {
+                displayName = "&cCancel filter"
+            }
+            val accept = buildItemStack(EMERALD_BLOCK) {
+                displayName = "&aAccept filter"
+            }
+
+            this[Row.R_3, Col.C_1, cancel] = {
+                chant.chant.remove(enchantment)
+                chant.enabled = chant.chant.isNotEmpty()
+
+                prevMenu?.open(who)
+                prevMenu?.fresh()
+
+                plugin.garnishManager.send(who, MENU_BUTTON_BACK)
+            }
+            this[Row.R_3, Col.C_9, accept] = {
+                chant.enabled = true
+
+                prevMenu?.open(who)
+                prevMenu?.fresh()
+
+                plugin.garnishManager.send(who, MENU_BUTTON_BACK)
+            }
+        }
+
+        override fun open(player: Player) {
+            if (enchantment !in chant.chant) {
+                chant.chant[enchantment] = 1
+            }
+
+            super.open(player)
+        }
+
+        private fun refreshDisplay() {
+            val display = buildItemStack(EXPERIENCE_BOTTLE, chant.chant[enchantment] ?: 1) {
+                displayName = "&fCurrent"
+                lore = listOf("  &a${chant.chant[enchantment] ?: 1}")
+            }
+
+            this[Row.R_1, Col.C_5, display] = {}
         }
 
     }

@@ -15,6 +15,7 @@ import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.exts.*
 import org.bukkit.Material.BARRIER
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import java.util.*
 
 class Product : Named, Unique<UUID>, Iconable, Searchable {
@@ -132,6 +133,18 @@ class Product : Named, Unique<UUID>, Iconable, Searchable {
                     }
                     is DataQuery.Kinds -> {
                         query.predicate.invoke(item.data.type)
+                    }
+                    is DataQuery.Chant -> {
+                        query.chant.all {
+                            val has = item.data.getEnchantmentLevel(it.key) == it.value
+
+                            if (has) {
+                                has
+                            }
+                            else {
+                                (item.data.itemMeta as? EnchantmentStorageMeta)?.getStoredEnchantLevel(it.key) == it.value
+                            }
+                        }
                     }
                 }
             }

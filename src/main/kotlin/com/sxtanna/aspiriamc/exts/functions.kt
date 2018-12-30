@@ -7,12 +7,18 @@ import me.tom.sparse.spigot.chat.menu.ChatMenu
 import me.tom.sparse.spigot.chat.menu.ChatMenuAPI
 import org.bukkit.ChatColor
 import org.bukkit.DyeColor
+import org.bukkit.DyeColor.BROWN
 import org.bukkit.Material
+import org.bukkit.Material.*
 import org.bukkit.command.Command
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemFlag.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.inventory.meta.ItemMeta
+import org.bukkit.inventory.meta.LeatherArmorMeta
+import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.util.io.BukkitObjectInputStream
 import org.bukkit.util.io.BukkitObjectOutputStream
 import java.io.*
@@ -82,7 +88,33 @@ fun itemStackName(item: ItemStack): String {
 }
 
 fun itemStackIsColor(item: ItemStack, color: DyeColor): Boolean {
-    return COLOR_MATERIAL_ASSOCIATIONS[color]?.contains(item.type) ?: false
+    return when (item.type) {
+        LEATHER_HELMET, LEATHER_CHESTPLATE, LEATHER_LEGGINGS, LEATHER_BOOTS -> {
+
+            if (item.hasItemMeta().not()) {
+                color == BROWN // quick return
+            } else {
+
+                val pass = color.color
+                val meta = (item.itemMeta as LeatherArmorMeta).color
+
+                val maxDist = 50
+
+                val rRange = (pass.red   - maxDist).coerceAtLeast(0)..(pass.red   + maxDist).coerceAtMost(255)
+                val gRange = (pass.green - maxDist).coerceAtLeast(0)..(pass.green + maxDist).coerceAtMost(255)
+                val bRange = (pass.blue  - maxDist).coerceAtLeast(0)..(pass.blue  + maxDist).coerceAtMost(255)
+
+                val rPass = meta.red   in rRange
+                val gPass = meta.green in gRange
+                val bPass = meta.blue  in bRange
+
+                return rPass && gPass && bPass
+            }
+        }
+        else                                                                -> {
+            COLOR_MATERIAL_ASSOCIATIONS[color]?.contains(item.type) ?: false
+        }
+    }
 }
 
 
@@ -143,6 +175,13 @@ fun buildUpdatingItemStack(plugin: Companies, type: Material, amount: Int = 1, b
 }
 
 
+fun buildTippedArrow(amount: Int = 1, block: PotionMeta.() -> Unit = {}): ItemStack {
+    return buildItemStack(TIPPED_ARROW, amount) {
+        (this as PotionMeta).block()
+    }
+}
+
+
 // bukkit extensions
 
 fun Player.inventoryCanHold(item: ItemStack): Boolean {
@@ -155,4 +194,30 @@ fun Player.inventoryCanHold(item: ItemStack): Boolean {
     }
 
     return false
+}
+
+fun ItemMeta.hideEverything() {
+    addItemFlags(HIDE_ENCHANTS,
+                 HIDE_ATTRIBUTES,
+                 HIDE_UNBREAKABLE,
+                 HIDE_DESTROYS,
+                 HIDE_PLACED_ON,
+                 HIDE_POTION_EFFECTS)
+}
+
+fun Enchantment.properName(): String {
+    return when(this) {
+        Enchantment.BINDING_CURSE -> {
+            "Curse Of Binding"
+        }
+        Enchantment.VANISHING_CURSE -> {
+            "Curse Of Vanishing"
+        }
+        Enchantment.SWEEPING_EDGE -> {
+            "Sweeping Edge"
+        }
+        else -> {
+            key.key.split('_').joinToString(" ") { it.toLowerCase().capitalize() }
+        }
+    }
 }

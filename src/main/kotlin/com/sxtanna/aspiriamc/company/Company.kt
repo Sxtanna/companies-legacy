@@ -7,17 +7,13 @@ import com.sxtanna.aspiriamc.base.Searchable.Query
 import com.sxtanna.aspiriamc.company.Company.Finance.Account
 import com.sxtanna.aspiriamc.config.Configs.DISPLAY_DEF_ICON
 import com.sxtanna.aspiriamc.config.Configs.PAYOUTS_DEF_RATIO
-import com.sxtanna.aspiriamc.exts.buildItemStack
-import com.sxtanna.aspiriamc.exts.buildUpdatingItemStack
-import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
-import com.sxtanna.aspiriamc.exts.updateItemMeta
+import com.sxtanna.aspiriamc.exts.*
 import com.sxtanna.aspiriamc.manager.HiringsManager
 import com.sxtanna.aspiriamc.market.Product
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.Material.AIR
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemFlag.*
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
@@ -56,12 +52,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
         return if (plugin.companyManager.sponsorManager.isSponsored(this)) {
             buildUpdatingItemStack(plugin, type, 1,
                                    block = {
-                                       addItemFlags(HIDE_ENCHANTS,
-                                                    HIDE_ATTRIBUTES,
-                                                    HIDE_UNBREAKABLE,
-                                                    HIDE_DESTROYS,
-                                                    HIDE_PLACED_ON,
-                                                    HIDE_POTION_EFFECTS)
+                                       hideEverything()
 
                                        displayName = "&f$name"
                                        lore = listOf("",
@@ -71,12 +62,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
                                    },
                                    update = {
                                        updateItemMeta(this) {
-                                           addItemFlags(HIDE_ENCHANTS,
-                                                        HIDE_ATTRIBUTES,
-                                                        HIDE_UNBREAKABLE,
-                                                        HIDE_DESTROYS,
-                                                        HIDE_PLACED_ON,
-                                                        HIDE_POTION_EFFECTS)
+                                           hideEverything()
 
                                            displayName = "&e$name"
                                            lore = listOf("",
@@ -89,12 +75,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
                                    })
         } else {
             buildItemStack(type) {
-                addItemFlags(HIDE_ENCHANTS,
-                             HIDE_ATTRIBUTES,
-                             HIDE_UNBREAKABLE,
-                             HIDE_DESTROYS,
-                             HIDE_PLACED_ON,
-                             HIDE_POTION_EFFECTS)
+                hideEverything()
 
                 displayName = "&f$name"
                 lore = listOf("",
