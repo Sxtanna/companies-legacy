@@ -54,7 +54,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
                                    block = {
                                        hideEverything()
 
-                                       displayName = "&f$name"
+                                       displayName = "&f${strip(name)}"
                                        lore = listOf("",
                                                      "",
                                                      "&7Employees: &a${staffer.size}",
@@ -64,7 +64,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
                                        updateItemMeta(this) {
                                            hideEverything()
 
-                                           displayName = "&e$name"
+                                           displayName = "&e${strip(name)}"
                                            lore = listOf("",
                                                          "",
                                                          "&7Employees: &a${staffer.size}",
@@ -77,7 +77,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
             buildItemStack(type) {
                 hideEverything()
 
-                displayName = "&f$name"
+                displayName = "&f${strip(name)}"
                 lore = listOf("",
                               "",
                               "&7Employees: &a${staffer.size}",
