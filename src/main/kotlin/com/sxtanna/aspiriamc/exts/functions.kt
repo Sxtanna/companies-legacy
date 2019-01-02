@@ -71,7 +71,7 @@ fun color(text: String): String {
 }
 
 fun strip(text: String): String {
-    return ChatColor.stripColor(text)
+    return ChatColor.stripColor(color(text))
 }
 
 
