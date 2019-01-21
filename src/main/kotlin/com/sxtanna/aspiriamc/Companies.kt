@@ -25,27 +25,38 @@ import java.util.*
 
 class Companies : JavaPlugin() {
 
-    val korm = Korm()
-    val managers = mutableListOf<Manager>()
+    internal val korm = Korm()
+    internal val managers = mutableListOf<Manager>()
 
 
     lateinit var economyHook: EconomyHook
+        private set
     lateinit var companyDatabase: CompanyDatabase
-
+        private set
 
     lateinit var configsManager: ConfigsManager
+        private set
     lateinit var garnishManager: GarnishManager
+        private set
 
     lateinit var messageManager: MessageManager
+        private set
     lateinit var listensManager: ListensManager
+        private set
     lateinit var commandManager: CommandManager
+        private set
 
     lateinit var marketsManager: MarketsManager
+        private set
 
     lateinit var stafferManager: StafferManager
+        private set
     lateinit var companyManager: CompanyManager
+        private set
     lateinit var hiringsManager: HiringsManager
+        private set
     lateinit var reportsManager: ReportsManager
+        private set
 
 
     override fun onLoad() {
