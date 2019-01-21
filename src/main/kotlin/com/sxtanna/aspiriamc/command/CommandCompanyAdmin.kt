@@ -136,7 +136,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
                 "you must define the name of the player you want to fix!"
             }
 
-            retrieveStafferByName(targetName) { player, staffer ->
+            retrieveStafferByName(targetName) { _, staffer ->
                 when (val result = fixStaffer(staffer)) {
                     is Some -> {
                         reply("&asuccess:&7 ${result.data}")
