@@ -555,6 +555,10 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("you must be the owner of the company to hire employees")
                 }
 
+                if (company.staffer.size >= plugin.companyManager.memberMax) {
+                    return@retrieveCompany reply("your company cannot hire any more players")
+                }
+
                 val targetName = notNull(input.getOrNull(0)) {
                     "you must define the name of the player you want to hire!"
                 }
