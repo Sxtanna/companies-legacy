@@ -52,8 +52,10 @@ sealed class Result<T : Any> {
 
     object ResultContext {
 
+        private data class ResultException(override val message: String) : Exception(message)
+
         fun fail(reason: String): Nothing {
-            throw IllegalStateException(reason)
+            throw ResultException(reason)
         }
 
     }
