@@ -162,6 +162,18 @@ class CommandCompanyAdmin(override val plugin: Companies)
                     fail("no company has this staffer listed")
                 }
                 else -> {
+                    val company = plugin.quickAccessCompanyByCompanyUUID(staffer.companyUUID)
+
+                    if (company == null) {
+                        staffer.companyUUID = null
+                        return@of "successfully voided employee"
+                    }
+
+                    if (staffer.uuid !in company) {
+                        staffer.companyUUID = null
+                        return@of "successfully re-fired employee, lol..."
+                    }
+
                     fail("does not need to be fixed")
                 }
             }
