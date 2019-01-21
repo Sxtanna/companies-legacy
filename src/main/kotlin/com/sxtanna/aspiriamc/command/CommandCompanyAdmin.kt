@@ -22,8 +22,8 @@ class CommandCompanyAdmin(override val plugin: Companies)
     init {
         register(CommandCompanySave())
         register(CommandCompanyConfig())
-        register(CommandCompanyAdminFix())
-        register(CommandCompanyPastPurchases())
+        register(CommandCompanyFix())
+        register(CommandCompanyPast())
     }
 
 
@@ -122,7 +122,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
     }
 
-    inner class CommandCompanyAdminFix : CommandBase {
+    inner class CommandCompanyFix : CommandBase {
 
         override val name = "fix"
 
@@ -184,7 +184,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
     }
 
-    inner class CommandCompanyPastPurchases : CommandBase {
+    inner class CommandCompanyPast : CommandBase {
 
         override val name = "past"
 
