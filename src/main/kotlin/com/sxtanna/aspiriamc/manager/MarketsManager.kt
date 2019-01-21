@@ -7,15 +7,9 @@ import com.sxtanna.aspiriamc.manager.base.Manager
 
 class MarketsManager(override val plugin: Companies) : Manager("Markets") {
 
-    var itemMax = -1
-        private set
-    var iconFee = 0.0
-        private set
-
-
-    override fun enable() {
-        itemMax = plugin.configsManager.get(MARKET_ITEM_MAX)
-        iconFee = plugin.configsManager.get(MARKET_ICON_FEE)
-    }
+    val itemMax: Int
+        get() = plugin.configsManager.get(MARKET_ITEM_MAX)
+    val iconFee: Double
+        get() = plugin.configsManager.get(MARKET_ICON_FEE)
 
 }

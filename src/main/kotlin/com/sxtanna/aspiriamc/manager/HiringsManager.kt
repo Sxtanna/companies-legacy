@@ -17,13 +17,11 @@ class HiringsManager(override val plugin: Companies) : Manager("Hiring") {
     lateinit var clear: BukkitTask
 
 
-    var respondTime = 0L
-        private set
+    val respondTime: Long
+        get() = plugin.configsManager.get(HIRINGS_RESPOND_TIME)
 
 
     override fun enable() {
-        respondTime = plugin.configsManager.get(HIRINGS_RESPOND_TIME)
-
         clear = repeatAsync(20) {
             if (cache.isEmpty()) return@repeatAsync
 

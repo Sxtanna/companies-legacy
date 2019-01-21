@@ -24,19 +24,15 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
     internal val cache = mutableMapOf<Any, Company>()
 
-    var memberMax = 0
-        private set
-    var createFee = 0.0
-        private set
-    var renameFee = 0.0
-        private set
+    val memberMax: Int
+        get() = plugin.configsManager.get(COMPANY_MEMBER_MAX)
+    val createFee: Double
+        get() = plugin.configsManager.get(COMPANY_CREATE_FEE)
+    val renameFee: Double
+        get() = plugin.configsManager.get(COMPANY_RENAME_FEE)
 
 
     override fun enable() {
-        memberMax = plugin.configsManager.get(COMPANY_MEMBER_MAX)
-        createFee = plugin.configsManager.get(COMPANY_CREATE_FEE)
-        renameFee = plugin.configsManager.get(COMPANY_RENAME_FEE)
-
         sponsorManager.enable()
 
         plugin.companyDatabase.allCompanies(true, ::push)
@@ -235,16 +231,13 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
         internal val cached = mutableMapOf<UUID, Long>()
 
-        var liveTime = 0L
-            private set
-        var slotCost = 0.0
-            private set
+        val liveTime: Long
+            get() = plugin.configsManager.get(SPONSOR_LIVE_TIME)
+        val slotCost: Double
+            get() = plugin.configsManager.get(SPONSOR_SLOT_COST)
 
 
         override fun enable() {
-            liveTime = plugin.configsManager.get(SPONSOR_LIVE_TIME)
-            slotCost = plugin.configsManager.get(SPONSOR_SLOT_COST)
-
             val sponsoredCompanies = try {
                 plugin.korm.pull(File(pluginFolder, "sponsored-companies.korm")).toHashRef<UUID, Long>()
             } catch (ignored: Exception) {
