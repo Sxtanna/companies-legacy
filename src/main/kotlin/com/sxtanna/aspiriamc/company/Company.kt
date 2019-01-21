@@ -2,7 +2,8 @@ package com.sxtanna.aspiriamc.company
 
 import com.sxtanna.aspiriamc.Companies
 import com.sxtanna.aspiriamc.base.*
-import com.sxtanna.aspiriamc.base.Result.*
+import com.sxtanna.aspiriamc.base.Result.None
+import com.sxtanna.aspiriamc.base.Result.Some
 import com.sxtanna.aspiriamc.base.Searchable.Query
 import com.sxtanna.aspiriamc.company.Company.Finance.Account
 import com.sxtanna.aspiriamc.config.Configs.DISPLAY_DEF_ICON
@@ -91,12 +92,14 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
     }
 
 
-    fun hire(staffer: Staffer, hirings: HiringsManager): Result<Result.Status> = Result.of {
+    fun hire(staffer: Staffer, hirings: HiringsManager): Result<Unit> = Result.of {
         if (staffer.uuid in this@Company.staffer) {
-            Status.FAIL
-        } else when (val result = hirings.attemptHire(this@Company, staffer)) {
+            fail("they have already been hired")
+        }
+
+        when (val result = hirings.attemptHire(this@Company, staffer)) {
             is Some -> {
-                Status.PASS
+
             }
             is None -> {
                 result.rethrow()
@@ -110,13 +113,12 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
     }
 
 
-    fun fire(staffer: Staffer): Result<Result.Status> = Result.of {
+    fun fire(staffer: Staffer): Result<Unit> = Result.of {
         if (staffer.uuid !in this@Company.staffer) {
-            Status.FAIL
-        } else {
-            resetData(staffer)
-            Status.PASS
+            fail("they do not work for this company")
         }
+
+        resetData(staffer)
     }
 
 

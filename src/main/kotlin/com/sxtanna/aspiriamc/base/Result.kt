@@ -36,14 +36,6 @@ sealed class Result<T : Any> {
     }
 
 
-    enum class Status {
-
-        PASS,
-        FAIL,
-
-    }
-
-
     companion object {
 
         inline fun <T : Any> of(block: ResultContext.() -> T?): Result<T> = try {
@@ -54,16 +46,9 @@ sealed class Result<T : Any> {
             None(info)
         }
 
-
-        fun passing(): Result<Status> {
-            return of { Status.PASS }
-        }
-
-        fun failing(): Result<Status> {
-            return of { Status.FAIL }
-        }
-
     }
+
+
 
     object ResultContext {
 

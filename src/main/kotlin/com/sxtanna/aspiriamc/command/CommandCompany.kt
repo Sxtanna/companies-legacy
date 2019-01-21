@@ -3,8 +3,6 @@ package com.sxtanna.aspiriamc.command
 import com.sxtanna.aspiriamc.Companies
 import com.sxtanna.aspiriamc.base.Result.None
 import com.sxtanna.aspiriamc.base.Result.Some
-import com.sxtanna.aspiriamc.base.Result.Status.FAIL
-import com.sxtanna.aspiriamc.base.Result.Status.PASS
 import com.sxtanna.aspiriamc.command.base.CommandBase
 import com.sxtanna.aspiriamc.command.base.CommandContext
 import com.sxtanna.aspiriamc.company.Company
@@ -576,16 +574,9 @@ class CommandCompany(override val plugin: Companies)
             }
 
             when (val result = company.hire(targetStaffer, plugin.hiringsManager)) {
-                is Some -> when (result.data) {
-                    PASS -> {
-                        reply("successfully sent hiring invitation to '${target.name}'")
-
-                        reply("you've received a hiring request from &e${company.name}&r\n    &7execute &8'&f/company join ${company.name}&8'&r to accept", findPlayerByUUID(targetStaffer.uuid)
-                                                                                                                                                            ?: return)
-                    }
-                    FAIL -> {
-                        reply("failed to hire player '${target.name}', they have already been hired")
-                    }
+                is Some -> {
+                    reply("successfully sent hiring invitation to '${target.name}'")
+                    reply("you've received a hiring request from &e${company.name}&r\n    &7execute &8'&f/company join ${company.name}&8'&r to accept", findPlayerByUUID(targetStaffer.uuid) ?: return)
                 }
                 is None -> {
                     reply("failed to hire player '${target.name}': ${result.info}")
@@ -635,16 +626,9 @@ class CommandCompany(override val plugin: Companies)
             val name = plugin.stafferManager.names[firedStaffer.uuid]
 
             when (val result = company.fire(firedStaffer)) {
-                is Some -> when (result.data) {
-                    PASS -> {
-                        reply("successfully fired employee $name")
-
-                        reply("you have been fired from &e${company.name}&r", findPlayerByUUID(firedStaffer.uuid)
-                                                                              ?: return)
-                    }
-                    FAIL -> {
-                        reply("failed to fire employee $name: they do not work for this company")
-                    }
+                is Some -> {
+                    reply("successfully fired employee $name")
+                    reply("you have been fired from &e${company.name}&r", findPlayerByUUID(firedStaffer.uuid) ?: return)
                 }
                 is None -> {
                     reply("failed to fire employee $name: ${result.info}")
@@ -677,21 +661,15 @@ class CommandCompany(override val plugin: Companies)
                 }
 
                 when (val result = company.fire(staffer)) {
-                    is Some -> when (result.data) {
-                        PASS -> {
-                            reply("successfully resigned from &e${company.name}")
+                    is Some -> {
+                        reply("successfully resigned from &e${company.name}")
 
-                            company.onlineStaffers().forEach {
-                                reply("player &e${sender.name}&r has resigned from the company", it)
-                            }
-                        }
-                        FAIL -> {
-
-                            reply("failed to resign: &4&nreport to admin pls")
+                        company.onlineStaffers().forEach {
+                            reply("player &e${sender.name}&r has resigned from the company", it)
                         }
                     }
                     is None -> {
-                        reply("failed to resign: ${result.info}")
+                        reply("failed to resign: ${result.info.replace("they", "you")}")
                     }
                 }
             }
