@@ -120,7 +120,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
     }
 
     override fun topCompanies(returnSync: Boolean, onRetrieve: (companies: List<Company>) -> Unit) = accessDB {
-        val (companies) = select(base.COMPANY).descend(InDBCompany::balance).limit(plugin.configsManager.get(COMPANY_COMMAND_TOP_MAX))
+        val (companies) = select(base.COMPANY).descend(InDBCompany::balance).limit(plugin.configsManager.get(COMPANY_COMMAND_TOP_MAX).toLong())
 
         val values = companies.map(InDBCompany::toData)
 

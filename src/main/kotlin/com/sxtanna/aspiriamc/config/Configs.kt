@@ -59,10 +59,10 @@ sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
 
 
     object COMPANY_COMMAND_TOP_MAX
-        : Configs<Long>("company.command.top-max") {
+        : Configs<Int>("company.command.top-max") {
 
-        override fun value(yaml: ConfigurationSection): Long {
-            return yaml.getLong(path, 10L).coerceAtLeast(0)
+        override fun value(yaml: ConfigurationSection): Int {
+            return yaml.getInt(path, 10).coerceAtLeast(0)
         }
 
     }

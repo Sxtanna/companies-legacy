@@ -210,9 +210,8 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
 
         fun attempt(onRetrieve: (companies: List<Company>) -> Unit) {
-            companies
-                    .sortedByDescending { it.finance.balance }
-                    .take(plugin.configsManager.get(COMPANY_COMMAND_TOP_MAX).toInt())
+            companies.sortedByDescending { it.finance.balance }
+                    .take(plugin.configsManager.get(COMPANY_COMMAND_TOP_MAX))
                     .apply(onRetrieve)
 
             /*if (out == 0L || (currentTimeMillis() - out) >= max) {
