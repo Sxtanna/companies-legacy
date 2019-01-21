@@ -215,7 +215,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
         override fun CommandContext.complete(): List<String> {
             return when (input.size) {
                 1    -> {
-                    (1..10).map { "$it" }
+                    (1..9).map { "$it" }
                 }
                 2    -> {
                     TimeUnit.values().map { it.properName().toLowerCase() }.filterApplicable(1)
