@@ -78,6 +78,14 @@ class StafferManager(override val plugin: Companies) : Manager("Staffers") {
                         reply(player, "&cyour company was closed while you were offline")
                     }
                 }
+
+                if (company != null && data.uuid !in company.staffer) {
+                    data.companyUUID = null
+
+                    findPlayerByUUID(uuid)?.let { player ->
+                        reply(player, "&cyou were fired from your company while you were offline")
+                    }
+                }
             }
 
             whenLoaded.invoke(data, if (it == null) NEW else OLD)
