@@ -976,7 +976,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             }
 
             override fun createIcon(): ItemStack {
-                return createTypeIcon(DIAMOND_PICKAXE, "Boots", Enchantment.PROTECTION_FALL, Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER)
+                return createTypeIcon(DIAMOND_BOOTS, "Boots", Enchantment.PROTECTION_FALL, Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER)
             }
 
         }
