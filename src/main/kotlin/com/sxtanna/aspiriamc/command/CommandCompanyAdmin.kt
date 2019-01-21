@@ -9,10 +9,14 @@ import com.sxtanna.aspiriamc.command.base.CommandContext
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.company.menu.CompanyPastsMenu
+import com.sxtanna.aspiriamc.config.Configs
 import com.sxtanna.aspiriamc.exts.properName
+import org.bukkit.Material
+import org.bukkit.Material.AIR
 import org.bukkit.entity.Player
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
 
 class CommandCompanyAdmin(override val plugin: Companies)
     : Command("companyadmin", "compadmin") {
@@ -185,13 +189,86 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
         override val name = "config"
 
+        private val values = Configs.values()
+        private val valuesWithTypes = Configs.valuesWithTypes()
+
 
         override fun CommandContext.evaluate() {
+            val target = notNull(input.getOrNull(0)) {
+                "what config value do you want to target?"
+            }
 
+            val config = values.find { it::class.java.simpleName.equals(target, true) } as? Configs<Any> ?: return
+
+            val name = config::class.java.simpleName.toLowerCase()
+
+            if (input.size == 1) {
+                reply("value of $name is ${plugin.configsManager.get(config)}")
+                return
+            }
+
+            val value = notNull(mapValue(valuesWithTypes[config] ?: return, input[1])) {
+                "invalid value for $name"
+            }
+
+            plugin.configsManager.set(config, value)
+
+            reply("value of $name set to $value")
         }
 
         override fun CommandContext.complete(): List<String> {
-            return emptyList()
+            return when (input.size) {
+                1    -> {
+                    values.map { it::class.java.simpleName.toLowerCase() }.filterApplicable(0)
+                }
+                2    -> {
+                    val configs = values.find { it::class.java.simpleName.equals(input[0], true) } ?: return emptyList()
+
+                    when (valuesWithTypes[configs]) {
+                        TimeUnit::class -> {
+                            return TimeUnit.values().map { it.name.toLowerCase() }.filterApplicable(1)
+                        }
+                        Material::class -> {
+                            return Material.values()
+                                    .filter {
+                                        it != AIR && it.isItem && it.isLegacy.not()
+                                    }.map {
+                                        it.name.toLowerCase()
+                                    }.filterApplicable(1)
+                        }
+                    }
+
+
+                    listOf("Currently set to: ", plugin.configsManager.get(configs).toString())
+                }
+                else -> {
+                    emptyList()
+                }
+            }
+        }
+
+
+        private fun mapValue(clazz: KClass<*>, value: String): Any? {
+            return when (clazz) {
+                Int::class      -> {
+                    value.toIntOrNull()
+                }
+                Long::class     -> {
+                    value.toLongOrNull()
+                }
+                Double::class   -> {
+                    value.toDoubleOrNull()
+                }
+                TimeUnit::class -> {
+                    TimeUnit.values().find { it.name.equals(value, true) }
+                }
+                Material::class -> {
+                    Material.matchMaterial(value)
+                }
+                else            -> {
+                    null
+                }
+            }
         }
 
     }
