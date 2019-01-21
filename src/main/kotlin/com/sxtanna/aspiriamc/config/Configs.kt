@@ -5,6 +5,7 @@ import com.sxtanna.aspiriamc.database.base.DatabaseType
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
 
 @Suppress("ClassName")
 sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
@@ -114,6 +115,7 @@ sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
 
     }
 
+
     object SPONSOR_LIVE_TIME
         : Configs<Long>("company.sponsor.live-time") {
 
@@ -173,6 +175,68 @@ sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
 
         override fun value(yaml: ConfigurationSection): DatabaseType {
             return DatabaseType.get(yaml.getString(path, "LOCAL").toUpperCase())
+        }
+
+    }
+
+
+    companion object {
+
+        fun values(): List<Configs<*>> {
+            return listOf(COMPANY_MEMBER_MAX,
+                          COMPANY_CREATE_FEE,
+                          COMPANY_RENAME_FEE,
+
+                          COMPANY_HISTORY_TIME,
+                          COMPANY_HISTORY_UNIT,
+
+                          COMPANY_COMMAND_TOP_MAX,
+                          COMPANY_COMMAND_NAME_MAX,
+
+                          PAYOUTS_DEF_RATIO,
+                          PAYOUTS_DEF_TAXES,
+                          PAYOUTS_MAX_TAXES,
+
+                          HIRINGS_RESPOND_TIME,
+
+                          SPONSOR_LIVE_TIME,
+                          SPONSOR_SLOT_COST,
+
+                          DISPLAY_DEF_ICON,
+
+                          MARKET_ITEM_MAX,
+                          MARKET_ICON_FEE)
+        }
+
+        fun valuesWithTypes(): Map<Configs<*>, KClass<*>> {
+            return mapOf(
+                COMPANY_MEMBER_MAX to Int::class,
+                COMPANY_CREATE_FEE to Double::class,
+                COMPANY_RENAME_FEE to Double::class,
+
+                COMPANY_HISTORY_TIME to Long::class,
+                COMPANY_HISTORY_UNIT to TimeUnit::class,
+
+                COMPANY_COMMAND_TOP_MAX to Int::class,
+                COMPANY_COMMAND_NAME_MAX to Int::class,
+
+                PAYOUTS_DEF_RATIO to Int::class,
+                PAYOUTS_DEF_TAXES to Int::class,
+                PAYOUTS_MAX_TAXES to Int::class,
+
+                HIRINGS_RESPOND_TIME to Long::class,
+
+                SPONSOR_LIVE_TIME to Long::class,
+                SPONSOR_SLOT_COST to Double::class,
+
+                DISPLAY_DEF_ICON to Material::class,
+
+                MARKET_ITEM_MAX to Int::class,
+                MARKET_ICON_FEE to Double::class)
+        }
+
+        fun valueOf(name: String): Configs<*>? {
+            return values().find { it::class.java.simpleName.equals(name, true) }
         }
 
     }
