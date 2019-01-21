@@ -31,11 +31,15 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
             this[row, col, icon] = out@{
 
+                if (it.stafferUUID == who.uniqueId) {
+                    return@out reply("&cfailed to purchase product: you cannot purchase your own products")
+                }
+
                 if (it.canNotBuyDecide) {
                     return@out reply("&cfailed to purchase product: someone else is deciding on it")
                 }
-                if (it.stafferUUID == who.uniqueId) {
-                    return@out reply("&cfailed to purchase product: you cannot purchase your own products")
+                if (it.canNotBuyBought) {
+                    return@out reply("&cfailed to purchase product: someone else has already bought it")
                 }
 
                 val confirmation = object : ConfirmationMenu("Cost: &a$${it.cost.toReadableString()}") {

@@ -36,6 +36,13 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
             this[row, col, item] = out@{
                 if (who.uniqueId != it.stafferUUID || how != RIGHT) return@out
 
+                if (it.canNotBuyDecide) {
+                    return@out reply("&cfailed to reclaim item: someone is deciding on it")
+                }
+                if (it.canNotBuyBought) {
+                    return@out reply("&cfailed to reclaim item: someone has already bought it")
+                }
+
                 company.plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
 
                 when (val result = base64ToItemStack(it.base)) {
