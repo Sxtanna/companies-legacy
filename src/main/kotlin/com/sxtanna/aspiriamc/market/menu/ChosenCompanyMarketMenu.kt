@@ -7,10 +7,7 @@ import com.sxtanna.aspiriamc.base.Result.Some
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.config.Garnish.MARKET_PRODUCT_PURCHASE_FAIL
 import com.sxtanna.aspiriamc.config.Garnish.MARKET_PRODUCT_PURCHASE_PASS
-import com.sxtanna.aspiriamc.exts.base64ToItemStack
-import com.sxtanna.aspiriamc.exts.buildItemStack
-import com.sxtanna.aspiriamc.exts.inventoryCanHold
-import com.sxtanna.aspiriamc.exts.itemStackName
+import com.sxtanna.aspiriamc.exts.*
 import com.sxtanna.aspiriamc.market.Product
 import com.sxtanna.aspiriamc.market.sort.ProductSorter
 import com.sxtanna.aspiriamc.menu.Menu
@@ -41,12 +38,12 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                     return@out reply("&cfailed to purchase product: you cannot purchase your own products")
                 }
 
-                val confirmation = object : ConfirmationMenu("Cost: &a$${it.cost}") {
+                val confirmation = object : ConfirmationMenu("Cost: &a$${it.cost.toReadableString()}") {
 
                     override fun passLore(): List<String> {
                         return listOf(
                             "",
-                            "&7Buy &a${icon.itemMeta.displayName} &7for &a$${it.cost}"
+                            "&7Buy &a${icon.itemMeta.displayName} &7for &a$${it.cost.toReadableString()}"
                                      )
                     }
 
@@ -73,7 +70,8 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                                     this@ChosenCompanyMarketMenu.fresh()
                                     this@ChosenCompanyMarketMenu.open(action.who)
 
-                                    reply("&fsuccessfully purchased &e${if (item.data.type.maxStackSize == 1) "" else "${item.data.amount} "}${itemStackName(item.data)}&r for &a$${it.cost}")
+                                    reply("&fsuccessfully purchased &e${if (item.data.type.maxStackSize == 1) "" else "${item.data.amount} "}${itemStackName(item.data)}&r for &a$${it.cost.toReadableString()}")
+                                    it.canNotBuyBought = true
                                     return
                                 } else {
                                     plugin.economyHook.attemptGive(who.uniqueId, it.cost)

@@ -48,8 +48,12 @@ fun String.ownership(): String {
     return "$this${if (this.endsWith('s', true)) "'" else "'s"}"
 }
 
+fun Double.toReadableString(): String {
+    return toBigDecimal().toPlainString()
+}
+
 fun Double.formatToTwoPlaces(): Double {
-    val text = toBigDecimal().toPlainString()
+    val text = toReadableString()
     val left = text.substringAfter('.', "")
 
     return if (left.length < 2 || left.isBlank()) {
@@ -58,6 +62,8 @@ fun Double.formatToTwoPlaces(): Double {
         text.dropLast(left.length - 2)
     }.toDouble()
 }
+
+
 
 fun Throwable.consume(): String {
     return StringWriter().apply { printStackTrace(PrintWriter(this)) }.toString()
