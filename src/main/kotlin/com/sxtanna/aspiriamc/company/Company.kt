@@ -156,6 +156,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
         }
 
         staffer.companyUUID = null
+        plugin.companyDatabase.saveStaffer(staffer)
     }
 
     internal fun updateData(uuid: UUID, name: String, icon: Material, tariffs: Int, balance: Double, account: Map<UUID, Account>, staffer: List<UUID>, product: List<Product>): Company {
