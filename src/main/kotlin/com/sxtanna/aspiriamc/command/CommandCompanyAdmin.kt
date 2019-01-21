@@ -226,20 +226,14 @@ class CommandCompanyAdmin(override val plugin: Companies)
 
                     when (valuesWithTypes[configs]) {
                         TimeUnit::class -> {
-                            return TimeUnit.values().map { it.name.toLowerCase() }.filterApplicable(1)
+                            return TimeUnit.values().drop(3).map { it.name.toLowerCase() }.filterApplicable(1)
                         }
                         Material::class -> {
-                            return Material.values()
-                                    .filter {
-                                        it != AIR && it.isItem && it.isLegacy.not()
-                                    }.map {
-                                        it.name.toLowerCase()
-                                    }.filterApplicable(1)
+                            return Material.values().filter { it != AIR && it.isItem && it.isLegacy.not() }.map { it.name.toLowerCase() }.filterApplicable(1)
                         }
                     }
 
-
-                    listOf("Currently set to: ", plugin.configsManager.get(configs).toString())
+                    listOf(plugin.configsManager.get(configs).toString())
                 }
                 else -> {
                     emptyList()
