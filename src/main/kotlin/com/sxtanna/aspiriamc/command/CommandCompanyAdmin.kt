@@ -198,7 +198,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
                 "you must provide a valid time"
             }
 
-            val unit = notNull(input.getOrNull(1)?.let { data -> TimeUnit.values().find { it.name.equals(data, true) } }) {
+            val unit = notNull(input.getOrNull(1)?.let { data -> TimeUnit.values().drop(3).find { it.name.equals(data, true) } }) {
                 "you must provide a valid unit"
             }
 
@@ -218,7 +218,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
                     (1..9).map { "$it" }
                 }
                 2    -> {
-                    TimeUnit.values().map { it.properName().toLowerCase() }.filterApplicable(1)
+                    TimeUnit.values().drop(3).map { it.properName().toLowerCase() }.filterApplicable(1)
                 }
                 3    -> {
                     plugin.companyManager.companies.map(Company::name).filterApplicable(2)
