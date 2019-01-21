@@ -206,12 +206,16 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
 
 
         operator fun get(uuid: UUID): Account {
-            return account.computeIfAbsent(uuid) { Account(0, 0.0, 0.0, plugin.configsManager.get(PAYOUTS_DEF_RATIO)) }
+            return account.computeIfAbsent(uuid) {
+                Account(0, 0.0, 0.0, plugin.configsManager.get(PAYOUTS_DEF_RATIO))
+            }
         }
 
 
         fun resetPayoutRatios() {
-            account.values.forEach { it.payoutRatio = plugin.configsManager.get(PAYOUTS_DEF_RATIO) }
+            account.values.forEach {
+                it.payoutRatio = plugin.configsManager.get(PAYOUTS_DEF_RATIO)
+            }
         }
 
 
