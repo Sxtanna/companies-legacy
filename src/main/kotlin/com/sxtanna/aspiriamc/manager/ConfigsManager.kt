@@ -10,4 +10,8 @@ class ConfigsManager(override val plugin: Companies) : Manager("Configs") {
         return config.value(plugin.config)
     }
 
+    fun <T : Any> set(config: Configs<T>, value: T) {
+        plugin.config.set(config.path, value)
+    }
+
 }
