@@ -19,7 +19,6 @@ import com.sxtanna.aspiriamc.reports.Reports
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -117,7 +116,7 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
 
 
     fun purchasesFromPast(company: Company, time: Long, unit: TimeUnit, onLoad: (List<Reports.Purchase.Item>)  -> Unit) {
-        plugin.companyDatabase.loadReports(PURCHASE_ITEM, Instant.now().toEpochMilli() - (MILLISECONDS.convert(time, unit))) { reports ->
+        plugin.companyDatabase.loadReports(PURCHASE_ITEM, System.currentTimeMillis() - (MILLISECONDS.convert(time, unit))) { reports ->
             val output = reports.filterIsInstance<Reports.Purchase.Item>().filter { it.idComp == company.uuid }
 
             onLoad.invoke(output)
