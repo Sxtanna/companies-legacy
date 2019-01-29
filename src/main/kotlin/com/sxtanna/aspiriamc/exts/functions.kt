@@ -63,6 +63,9 @@ fun Double.formatToTwoPlaces(): Double {
     }.toDouble()
 }
 
+fun mapToWithin(value: Int, originMin: Int, originMax: Int, targetMin: Int, targetMax: Int): Int {
+    return (value - originMin) * (targetMax - targetMin) / (originMax - originMin) + targetMin
+}
 
 
 fun Throwable.consume(): String {

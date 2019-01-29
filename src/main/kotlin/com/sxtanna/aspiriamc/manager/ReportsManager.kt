@@ -7,6 +7,7 @@ import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.exts.consume
 import com.sxtanna.aspiriamc.exts.ensureUsable
 import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
+import com.sxtanna.aspiriamc.exts.mapToWithin
 import com.sxtanna.aspiriamc.manager.base.Manager
 import com.sxtanna.aspiriamc.market.Product
 import com.sxtanna.aspiriamc.reports.CompanyDebug
@@ -20,10 +21,23 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 class ReportsManager(override val plugin: Companies) : Manager("Reports") {
+
+    val popularity = Popularity(plugin)
+
+
+    override fun enable() {
+        popularity.enable()
+    }
+
+    override fun disable() {
+        popularity.disable()
+    }
+
 
     fun reportPurchase(product: Product, buyer: Player, itemStack: ItemStack) {
 
@@ -115,7 +129,7 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
     }
 
 
-    fun purchasesFromPast(company: Company, time: Long, unit: TimeUnit, onLoad: (List<Reports.Purchase.Item>)  -> Unit) {
+    fun purchasesFromPast(company: Company, time: Long, unit: TimeUnit, onLoad: (List<Reports.Purchase.Item>) -> Unit) {
         plugin.companyDatabase.loadReports(PURCHASE_ITEM, System.currentTimeMillis() - (MILLISECONDS.convert(time, unit))) { reports ->
             val output = reports.filterIsInstance<Reports.Purchase.Item>().filter { it.idComp == company.uuid }
 
@@ -168,6 +182,43 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
         transactions.putAll(remaining.associate { it to revenue })
 
         reportPurchaseItem(product, company, buyer, transactions)
+    }
+
+
+    inner class Popularity(override val plugin: Companies) : Manager("Popularity") {
+
+        /**
+         * score is based on purchases within the past week
+         *
+         *  - mapped between 0 and 100
+         *
+         */
+        private val scores = ConcurrentHashMap<UUID, Int>()
+
+
+        operator fun get(uuid: UUID): Int {
+            return scores[uuid] ?: -1
+        }
+
+
+        override fun enable() {
+            // this is a super heavy operation, lucky for us, it's asynchronous :)
+            loadPopularityInfo()
+        }
+
+        override fun disable() {
+            scores.clear()
+        }
+
+
+        private fun loadPopularityInfo() {
+            plugin.companyManager.companies.forEach { company ->
+                purchasesFromPast(company, 7, TimeUnit.DAYS) {
+                    scores[company.uuid] = mapToWithin(it.size.coerceAtMost(100), 0, 50, 0, 100)
+                }
+            }
+        }
+
     }
 
 }

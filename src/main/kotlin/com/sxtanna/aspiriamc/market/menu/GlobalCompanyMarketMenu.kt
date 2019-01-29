@@ -9,6 +9,7 @@ import com.sxtanna.aspiriamc.company.menu.CompanyVoidsMenu
 import com.sxtanna.aspiriamc.config.Garnish.MENU_BUTTON_CLICK
 import com.sxtanna.aspiriamc.exts.buildItemStack
 import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
+import com.sxtanna.aspiriamc.market.sort.CompanySorter
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
@@ -188,7 +189,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
     }
 
     private fun allCompanies(): List<List<Company>> {
-        return companies.filter { it.product.isNotEmpty() && it !in sponsored }.chunked(36).takeIf { it.isNotEmpty() } ?: listOf(emptyList())
+        return companies.filter { it.product.isNotEmpty() && it !in sponsored }.sortedWith(CompanySorter.ByPopularity).chunked(36).takeIf { it.isNotEmpty() } ?: listOf(emptyList())
     }
 
 
