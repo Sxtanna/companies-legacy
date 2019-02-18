@@ -35,7 +35,7 @@ dependencies {
     
     // compile libs
     compile "com.sxtanna.db:Kuery:1.5.4"
-    compile "com.sxtanna.korm:Korm:1.6.2"
+    compile "com.sxtanna.korm:Korm:1.6.4"
 
     compile fileTree(dir: 'gradle/lib', include: ['*.jar'])
 
