@@ -66,6 +66,12 @@ sealed class Reports : Unique<UUID> {
 
         }
 
+        data class Name(override val amount: Double, val by: UUID, val idComp: UUID, val oldName: String, val newName: String) : Purchase() {
+
+            override val format = PURCHASE_NAME
+
+        }
+
     }
 
 
@@ -90,6 +96,9 @@ sealed class Reports : Unique<UUID> {
                 }
                 PURCHASE_ITEM -> {
                     reader.mapInstance(Item::class, types)
+                }
+                PURCHASE_NAME -> {
+                    reader.mapInstance(Name::class, types)
                 }
             }
         }
