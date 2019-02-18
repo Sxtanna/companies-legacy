@@ -9,6 +9,9 @@ version '1.2'
 
 
 repositories {
+    mavenLocal()
+    mavenCentral()
+    
     def repoUrls = [
             // minecraft
             "https://oss.sonatype.org/content/repositories/snapshots",
@@ -21,9 +24,6 @@ repositories {
     repoUrls.forEach { repoUrl ->
         maven { url = repoUrl }
     }
-
-    mavenLocal()
-    mavenCentral()
 }
 
 dependencies {
