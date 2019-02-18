@@ -10,5 +10,6 @@ enum class Format {
     PURCHASE_COMP, // when they purchase a company
     PURCHASE_ICON, // when they purchase an icon
     PURCHASE_ITEM, // when they purchase an item
+    PURCHASE_NAME, // when they rename their company
 
 }
