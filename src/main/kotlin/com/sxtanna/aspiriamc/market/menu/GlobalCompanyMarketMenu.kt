@@ -212,9 +212,22 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
 
         private val instances = mutableSetOf<GlobalCompanyMarketMenu>()
 
-        internal val refresher = PluginRunnable {
+        private var refresher = PluginRunnable {
             instances.forEach {
                 it.executions.forEach(UpdatingItemStack::update)
+            }
+        }
+
+        internal fun loadRefresher(plugin: Companies) {
+            refresher.runTaskTimer(plugin, 0L, 20L)
+        }
+
+        internal fun killRefresher() {
+            refresher.cancel()
+            refresher = PluginRunnable {
+                instances.forEach {
+                    it.executions.forEach(UpdatingItemStack::update)
+                }
             }
         }
 

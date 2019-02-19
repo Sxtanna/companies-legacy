@@ -187,13 +187,13 @@ class Companies : JavaPlugin() {
 
         internal fun load(plugin: Companies) {
             plugin.server.pluginManager.registerEvents(MenuListener, plugin)
-            GlobalCompanyMarketMenu.refresher.runTaskTimer(plugin, 0L, 20L)
+            GlobalCompanyMarketMenu.loadRefresher(plugin)
             TimChatMenuAPI.init(plugin)
         }
 
         internal fun kill() {
             HandlerList.unregisterAll(MenuListener)
-            GlobalCompanyMarketMenu.refresher.cancel()
+            GlobalCompanyMarketMenu.killRefresher()
             TimChatMenuAPI.disable()
         }
 
