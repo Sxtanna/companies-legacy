@@ -14,8 +14,8 @@ repositories {
     
     def repoUrls = [
             // minecraft
+            "https://papermc.io/repo/repository/maven-public/",
             "https://oss.sonatype.org/content/repositories/snapshots",
-            "https://repo.destroystokyo.com/repository/maven-public/",
 
             // libraries
             "http://nexus.hc.to/content/repositories/pub_releases"
