@@ -159,13 +159,13 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
         val payouts = if (company.staffer.size == 1) revenue else ((revenue / 100.0) * account.payoutRatio)
 
         account.soldItem(product.cost, payouts)
-        plugin.economyHook.attemptGive(stafferUUID, revenue)
+        plugin.economyHook.attemptGive(stafferUUID, payouts)
 
         revenue -= payouts
 
         plugin.messageManager.sendSoldMessageFor(product, company, buyer.name, payouts.formatToTwoPlaces(), tariffs, itemStack)
 
-        if (company.staffer.size == 1) {
+        if (company.staffer.size == 1 || revenue <= 0.0) {
             val transactions = mapOf(company.uuid to tariffs,
                                      stafferUUID to payouts)
 
