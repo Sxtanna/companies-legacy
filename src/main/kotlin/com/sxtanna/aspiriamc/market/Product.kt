@@ -136,14 +136,7 @@ class Product : Named, Unique<UUID>, Iconable, Searchable {
                     }
                     is DataQuery.Chant -> {
                         query.chant.all {
-                            val has = item.data.getEnchantmentLevel(it.key) == it.value
-
-                            if (has) {
-                                has
-                            }
-                            else {
-                                (item.data.itemMeta as? EnchantmentStorageMeta)?.getStoredEnchantLevel(it.key) == it.value
-                            }
+                            it.value == item.data.getEnchantmentLevel(it.key) || it.value == (item.data.itemMeta as? EnchantmentStorageMeta)?.getStoredEnchantLevel(it.key)
                         }
                     }
                 }
