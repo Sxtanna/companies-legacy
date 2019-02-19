@@ -90,6 +90,8 @@ class Companies : JavaPlugin() {
             return
         }
 
+        MenuListener.load(this)
+
         try {
             companyDatabase.load()
         } catch (ex: Exception) {
@@ -115,11 +117,11 @@ class Companies : JavaPlugin() {
                 reportsManager.reportException(ex)
             }
         }
-
-        MenuListener.load(this)
     }
 
     override fun onDisable() {
+        MenuListener.kill()
+
         managers.forEach {
             try {
                 it.disable()
@@ -134,8 +136,6 @@ class Companies : JavaPlugin() {
                 reportsManager.reportException(ex)
             }
         }
-
-        MenuListener.kill()
     }
 
 
