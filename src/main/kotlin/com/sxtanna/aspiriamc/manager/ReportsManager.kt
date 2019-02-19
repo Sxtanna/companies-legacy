@@ -20,6 +20,7 @@ import com.sxtanna.aspiriamc.reports.Reports
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.scheduler.BukkitTask
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -192,6 +193,7 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
 
     inner class Popularity(override val plugin: Companies) : Manager("Popularity") {
 
+        private var update: BukkitTask? = null
         /**
          * score is based on purchases within the past week
          *
@@ -208,18 +210,29 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
 
         override fun enable() {
             // this is a super heavy operation, lucky for us, it's asynchronous :)
-            loadPopularityInfo()
+            loadPopularityInfo(this.scores)
+
+            update?.cancel()
+            update = repeat((20 * 60) * 5) {
+                popularity.pollPopularityInfo()
+            }
         }
 
         override fun disable() {
             scores.clear()
+            update?.cancel()
         }
 
 
-        private fun loadPopularityInfo() {
+        internal fun pollPopularityInfo() {
+            this.scores.clear()
+            loadPopularityInfo(this.scores)
+        }
+
+        private fun loadPopularityInfo(scores: MutableMap<UUID, Int>) {
             plugin.companyManager.companies.forEach { company ->
                 purchasesFromPast(company, 7, TimeUnit.DAYS) {
-                    scores[company.uuid] = mapToWithin(it.size.coerceAtMost(100), 0, 50, 0, 100)
+                    scores[company.uuid] = mapToWithin(it.size.coerceAtMost(200), 0, 200, 0, 100)
                 }
             }
         }
