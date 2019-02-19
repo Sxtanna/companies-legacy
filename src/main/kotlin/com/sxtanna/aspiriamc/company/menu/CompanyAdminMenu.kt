@@ -1,20 +1,18 @@
 package com.sxtanna.aspiriamc.company.menu
 
 import com.sxtanna.aspiriamc.company.Company
-import com.sxtanna.aspiriamc.config.Garnish.COMPANY_PAYOUTS_CHANGE
-import com.sxtanna.aspiriamc.config.Garnish.COMPANY_PAYOUTS_RESET
+import com.sxtanna.aspiriamc.config.Garnish.*
 import com.sxtanna.aspiriamc.exts.buildItemStack
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
-import org.bukkit.Material.PLAYER_HEAD
-import org.bukkit.Material.REDSTONE_BLOCK
+import org.bukkit.Material.*
 import org.bukkit.event.inventory.ClickType.MIDDLE
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import java.util.*
 
-class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null) : Menu("&nManage&r &l»&r ${company.name}", Row.R_4) {
+class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null, val adminMode: Boolean = false) : Menu("&n${if (adminMode) "Viewing" else "Manage"}&r &l»&r ${company.name}", Row.R_4) {
 
     private val pagination = StafferPagination()
 
@@ -22,14 +20,14 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null)
     private val resetButton = buildItemStack(REDSTONE_BLOCK) {
         displayName = "&eEmployee Percentages"
         lore = listOf(
-                "&7Employee percentages determine what",
-                "&7amount of money an employee gets when",
-                "&7their item sells. The rest of the money",
-                "&7is split equally to all the employees.",
-                "",
-                "&eMiddle Mouse Button Click",
-                "&7to reset all employee percentages."
-        )
+            "&7Employee percentages determine what",
+            "&7amount of money an employee gets when",
+            "&7their item sells. The rest of the money",
+            "&7is split equally to all the employees.",
+            "",
+            "&eMiddle Mouse Button Click",
+            "&7to reset all employee percentages."
+                     )
     }
 
     private val resetAction = { action: MenuAction ->
@@ -45,12 +43,14 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null)
         pagination.page().forEach {
             val (row, col) = slotToGrid(stafferSlots.nextInt())
 
-            this[row, col, playerHeadIcon(it)] = {
+            this[row, col, playerHeadIcon(it)] = out@{
+                if (adminMode) return@out
+
                 val account = company.finance[it]
                 val payouts = account.payoutRatio
 
                 when {
-                    how.isLeftClick -> {
+                    how.isLeftClick  -> {
                         account.payoutRatio = (payouts - if (how.isShiftClick) 10 else 5).coerceAtLeast(0)
                     }
                     how.isRightClick -> {
@@ -68,11 +68,25 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null)
 
         pagination.init()
 
-        this[Row.R_4, Col.C_9, resetButton] = {
+        this[Row.R_4, Col.C_9, resetButton] = out@{
+            if (adminMode) return@out
+
             if (how == MIDDLE) resetAction.invoke(this)
         }
 
         initBackButton(prevMenu, company.plugin, Row.R_4, Col.C_5)
+
+
+        if (adminMode.not()) return
+
+        val button = buildItemStack(SIGN) {
+            displayName =  "&fView items being sold"
+        }
+
+        this[Row.R_4, Col.C_1, button] = out@ {
+            CompanyItemsMenu(company, this@CompanyAdminMenu, true).open(who)
+            company.plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
+        }
     }
 
     override fun fresh() {
@@ -89,16 +103,16 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null)
         return buildItemStack(PLAYER_HEAD) {
             displayName = "&f$display "
             lore = listOf(
-                    "&7Items Sold: &a${account.itemsSold}",
-                    "&7Items Selling: &a${company.product.count { it.stafferUUID == uuid }}",
-                    "",
-                    "&7Payout Ratio: &a${account.payoutRatio}&7%",
-                    "&7Player Earnings: &a$${account.playerPayout}",
-                    "&7Player Earnings for Company: &a$${account.playerProfit}",
-                    "",
-                    "&eLeft-Click&7 to decrease payout percentage",
-                    "&eRight-Click&7 to increase payout percentage"
-            )
+                "&7Items Sold: &a${account.itemsSold}",
+                "&7Items Selling: &a${company.product.count { it.stafferUUID == uuid }}",
+                "",
+                "&7Payout Ratio: &a${account.payoutRatio}&7%",
+                "&7Player Earnings: &a$${account.playerPayout}",
+                "&7Player Earnings for Company: &a$${account.playerProfit}",
+                "",
+                "&eLeft-Click&7 to decrease payout percentage",
+                "&eRight-Click&7 to increase payout percentage"
+                         )
 
             (this as SkullMeta).owningPlayer = company.plugin.server.getOfflinePlayer(uuid)
         }

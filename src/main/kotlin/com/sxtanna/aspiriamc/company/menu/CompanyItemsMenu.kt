@@ -17,7 +17,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType.RIGHT
 import java.util.concurrent.TimeUnit
 
-class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null) : Menu("&nProducts&r &l»&r ${company.name}", Row.R_6) {
+class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null, val adminMode: Boolean = false) : Menu("&nProducts&r &l»&r ${company.name}", Row.R_6) {
 
     private var clicked = false
     private val pagination = ChosenPagination()
@@ -34,7 +34,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
             }
 
             this[row, col, item] = out@{
-                if (who.uniqueId != it.stafferUUID || how != RIGHT) return@out
+                if (who.uniqueId != it.stafferUUID || how != RIGHT || adminMode) return@out
 
                 when(val attempt = it.attemptBuy()) {
                     is None -> {

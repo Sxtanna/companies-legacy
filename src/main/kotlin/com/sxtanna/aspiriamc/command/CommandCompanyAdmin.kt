@@ -8,6 +8,7 @@ import com.sxtanna.aspiriamc.command.base.CommandBase
 import com.sxtanna.aspiriamc.command.base.CommandContext
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
+import com.sxtanna.aspiriamc.company.menu.CompanyAdminMenu
 import com.sxtanna.aspiriamc.company.menu.CompanyPastsMenu
 import com.sxtanna.aspiriamc.config.Configs
 import com.sxtanna.aspiriamc.exts.properName
@@ -28,6 +29,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
         register(CommandCompanyConfig())
         register(CommandCompanyFix())
         register(CommandCompanyPast())
+        register(CommandCompanyView())
     }
 
 
@@ -312,6 +314,35 @@ class CommandCompanyAdmin(override val plugin: Companies)
             }
         }
 
+    }
+
+    inner class CommandCompanyView : CommandBase {
+
+        override val name = "view"
+
+
+        override fun CommandContext.evaluate() {
+            val player = notNull(getAsPlayer) {
+                "You must be a player to view a company"
+            }
+
+            val company = notNull(input.joinToString(" ").let { plugin.companyManager.get(it) }) {
+                "you must provide a valid company"
+            }
+
+            CompanyAdminMenu(company, adminMode = true).open(player)
+        }
+
+        override fun CommandContext.complete(): List<String> {
+            return when (input.size) {
+                1    -> {
+                    plugin.companyManager.companies.map(Company::name).filterApplicable(0)
+                }
+                else -> {
+                    emptyList()
+                }
+            }
+        }
     }
 
 }
