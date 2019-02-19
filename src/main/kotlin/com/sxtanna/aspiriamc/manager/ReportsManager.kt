@@ -118,6 +118,11 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
         plugin.companyDatabase.saveReports(report)
     }
 
+    fun reportPurchaseName(player: Player, renameFee: Double, company: Company, oldName: String, newName: String) {
+        val report = Reports.Purchase.Name(renameFee, player.uniqueId, company.uuid, oldName, newName)
+        plugin.companyDatabase.saveReports(report)
+    }
+
     fun reportPurchaseIcon(player: Player, iconFee: Double, company: Company, oldType: Material, newType: Material) {
         val report = Reports.Purchase.Icon(iconFee, player.uniqueId, company.uuid, oldType, newType)
         plugin.companyDatabase.saveReports(report)
