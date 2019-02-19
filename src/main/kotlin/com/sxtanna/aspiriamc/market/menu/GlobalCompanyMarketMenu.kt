@@ -189,7 +189,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
     }
 
     private fun allCompanies(): List<List<Company>> {
-        return companies.filter { it.product.isNotEmpty() && it !in sponsored }.sortedWith(CompanySorter.ByPopularity).chunked(36).takeIf { it.isNotEmpty() } ?: listOf(emptyList())
+        return companies.filter { it.product.isNotEmpty() && it !in sponsored }.sortedWith(CompanySorter.ByPopularity.reversed()).chunked(36).takeIf { it.isNotEmpty() } ?: listOf(emptyList())
     }
 
 
