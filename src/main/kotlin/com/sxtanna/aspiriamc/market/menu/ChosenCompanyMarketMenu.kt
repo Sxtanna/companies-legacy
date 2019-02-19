@@ -35,11 +35,10 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                     return@out reply("&cfailed to purchase product: you cannot purchase your own products")
                 }
 
-                if (it.canNotBuyDecide) {
-                    return@out reply("&cfailed to purchase product: someone else is deciding on it")
-                }
-                if (it.canNotBuyBought) {
-                    return@out reply("&cfailed to purchase product: someone else has already bought it")
+                when(val attempt = it.attemptBuy()) {
+                    is None -> {
+                        return@out reply("&cfailed to purchase product: ${attempt.info}")
+                    }
                 }
 
                 val confirmation = object : ConfirmationMenu("Cost: &a$${it.cost.toReadableString()}") {
@@ -75,7 +74,7 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                                     this@ChosenCompanyMarketMenu.open(action.who)
 
                                     reply("&fsuccessfully purchased &e${if (item.data.type.maxStackSize == 1) "" else "${item.data.amount} "}${itemStackName(item.data)}&r for &a$${it.cost.toReadableString()}")
-                                    it.canNotBuyBought = true
+                                    it.startBoughtLock()
                                     return
                                 } else {
                                     plugin.economyHook.attemptGive(who.uniqueId, it.cost)
@@ -93,23 +92,23 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                         }
 
                         action.who.closeInventory()
-                        it.canNotBuyDecide = false
+                        it.closeDecideLock()
                     }
 
                     override fun onFail(action: MenuAction) {
                         this@ChosenCompanyMarketMenu.open(action.who)
-                        it.canNotBuyDecide = false
+                        it.closeDecideLock()
                     }
 
 
                     override fun onClose(player: Player) {
-                        it.canNotBuyDecide = false
+                        it.closeDecideLock()
                     }
 
                 }
 
 
-                it.canNotBuyDecide = true
+                it.startDecideLock()
                 confirmation.open(who)
             }
         }

@@ -36,11 +36,10 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
             this[row, col, item] = out@{
                 if (who.uniqueId != it.stafferUUID || how != RIGHT) return@out
 
-                if (it.canNotBuyDecide) {
-                    return@out reply("&cfailed to reclaim item: someone is deciding on it")
-                }
-                if (it.canNotBuyBought) {
-                    return@out reply("&cfailed to reclaim item: someone has already bought it")
+                when(val attempt = it.attemptBuy()) {
+                    is None -> {
+                        return@out reply("&cfailed to reclaim item: ${attempt.info}")
+                    }
                 }
 
                 company.plugin.garnishManager.send(who, MENU_BUTTON_CLICK)
@@ -53,6 +52,8 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null)
                             company.product -= it
 
                             company.plugin.reportsManager.reportTakeItem(who, it, company)
+
+                            it.startSellerLock()
 
                             fresh()
                         } else {

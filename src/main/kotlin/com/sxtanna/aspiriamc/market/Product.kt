@@ -1,16 +1,13 @@
 package com.sxtanna.aspiriamc.market
 
 import com.sxtanna.aspiriamc.Companies
-import com.sxtanna.aspiriamc.base.Iconable
-import com.sxtanna.aspiriamc.base.Named
+import com.sxtanna.aspiriamc.base.*
 import com.sxtanna.aspiriamc.base.Result.None
 import com.sxtanna.aspiriamc.base.Result.Some
-import com.sxtanna.aspiriamc.base.Searchable
 import com.sxtanna.aspiriamc.base.Searchable.Query
 import com.sxtanna.aspiriamc.base.Searchable.Query.*
 import com.sxtanna.aspiriamc.base.Searchable.Query.CostQuery.CostType.ABOVE
 import com.sxtanna.aspiriamc.base.Searchable.Query.CostQuery.CostType.BELOW
-import com.sxtanna.aspiriamc.base.Unique
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.exts.*
 import org.bukkit.Material.BARRIER
@@ -24,9 +21,11 @@ class Product : Named, Unique<UUID>, Iconable, Searchable {
     internal lateinit var plugin: Companies
 
     @Transient
-    internal var canNotBuyDecide = false
+    private var canNotBuyDecide = false // in deciding menu
     @Transient
-    internal var canNotBuyBought = false
+    private var canNotBuyBought = false // already bought by a player
+    @Transient
+    private var canNotBuySeller = false // taken back by the seller
 
 
     override var name = ""
@@ -63,6 +62,38 @@ class Product : Named, Unique<UUID>, Iconable, Searchable {
         this.companyUUID = staffer.companyUUID
 
         return this
+    }
+
+
+    internal fun attemptBuy(): Result<Unit> {
+        return Result.of {
+            if (canNotBuyBought) {
+                fail("someone has already bought it")
+            }
+            if (canNotBuyDecide) {
+                fail("someone is deciding on it")
+            }
+            if (canNotBuySeller) {
+                fail("the seller has already reclaimed it")
+            }
+        }
+    }
+
+
+    internal fun startDecideLock() {
+        canNotBuyDecide = true
+    }
+
+    internal fun closeDecideLock() {
+        canNotBuyDecide = false
+    }
+
+    internal fun startBoughtLock() {
+        canNotBuyBought = true
+    }
+
+    internal fun startSellerLock() {
+        canNotBuySeller = true
     }
 
 

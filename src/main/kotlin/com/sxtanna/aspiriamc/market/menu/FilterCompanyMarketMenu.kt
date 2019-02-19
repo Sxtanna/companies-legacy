@@ -216,14 +216,14 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
                 this[row, col, icon] = out@{
 
-                    if (it.canNotBuyDecide) {
-                        return@out reply("&cfailed to purchase product: someone else is deciding on it")
-                    }
-                    if (it.canNotBuyBought) {
-                        return@out reply("&cfailed to purchase product: someone else has already bought it")
-                    }
                     if (it.stafferUUID == who.uniqueId) {
                         return@out reply("&cfailed to purchase product: you cannot purchase your own products")
+                    }
+
+                    when(val attempt = it.attemptBuy()) {
+                        is None -> {
+                            return@out reply("&cfailed to purchase product: ${attempt.info}")
+                        }
                     }
 
                     val confirmation = object : ConfirmationMenu("Cost: &a$${it.cost}") {
@@ -276,23 +276,23 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
                             }
 
                             action.who.closeInventory()
-                            it.canNotBuyDecide = false
+                            it.closeDecideLock()
                         }
 
                         override fun onFail(action: MenuAction) {
                             this@Output.open(action.who)
-                            it.canNotBuyDecide = false
+                            it.closeDecideLock()
                         }
 
 
                         override fun onClose(player: Player) {
-                            it.canNotBuyDecide = false
+                            it.closeDecideLock()
                         }
 
                     }
 
 
-                    it.canNotBuyDecide = true
+                    it.startDecideLock()
                     confirmation.open(who)
                 }
             }
