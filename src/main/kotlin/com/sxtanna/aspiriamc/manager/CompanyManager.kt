@@ -118,41 +118,50 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
 
     fun attemptCreate(name: String, player: Player) = Result.of {
-        val max = plugin.configsManager.get(COMPANY_COMMAND_NAME_MAX)
-
-        if (name.length > max) {
-            fail("company name $name is too long, must be at most $max")
+        when(val available = checkNameAvailability(name)) {
+            is None -> {
+                available.rethrow()
+            }
         }
 
-        when (val existed = get(name)) {
-            null -> when (val result = plugin.economyHook.attemptTake(player, createFee)) {
-                is Some -> {
-                    Company(name).apply(::push)
-                }
-                is None -> {
-                    result.rethrow()
-                }
+        when (val create = plugin.economyHook.attemptTake(player, createFee)) {
+            is Some -> {
+                Company(name).apply(::push)
             }
-            else -> {
-                fail("company ${existed.name} already exists")
+            is None -> {
+                create.rethrow()
             }
         }
     }
 
     fun attemptRename(company: Company, name: String, player: Player) = Result.of {
+        when(val available = checkNameAvailability(name)) {
+            is None -> {
+                available.rethrow()
+            }
+        }
+
+        when (val rename = plugin.economyHook.attemptTake(player, renameFee)) {
+            is Some -> {
+                cache.remove(company.name.toLowerCase())
+                company.name = name
+                cache[company.name.toLowerCase()] = company
+            }
+            is None -> {
+                rename.rethrow()
+            }
+        }
+    }
+
+    fun checkNameAvailability(name: String) = Result.of {
         val max = plugin.configsManager.get(COMPANY_COMMAND_NAME_MAX)
 
         if (name.length > max) {
-            fail("company name $name is too long, must be at most $max")
+            fail("company name '$name' is too long, must be at most $max letters.")
         }
 
-        when (val purchase = plugin.economyHook.attemptTake(player, renameFee)) {
-            is Some -> {
-                company.name = name
-            }
-            is None -> {
-                purchase.rethrow()
-            }
+        if (get(name) != null) {
+            fail("a company named '$name' already exists, please choose another name.")
         }
     }
 

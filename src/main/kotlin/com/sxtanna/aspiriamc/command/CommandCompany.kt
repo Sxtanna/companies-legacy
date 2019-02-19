@@ -9,7 +9,6 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.company.menu.CompanyAdminMenu
 import com.sxtanna.aspiriamc.company.menu.CompanyItemsMenu
-import com.sxtanna.aspiriamc.config.Configs.COMPANY_COMMAND_NAME_MAX
 import com.sxtanna.aspiriamc.config.Configs.PAYOUTS_MAX_TAXES
 import com.sxtanna.aspiriamc.config.Garnish.*
 import com.sxtanna.aspiriamc.exts.*
@@ -406,9 +405,14 @@ class CommandCompany(override val plugin: Companies)
                 return reply("failed to create company: you have voided items to claim")
             }
 
-            val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() } ?: return reply("you must define the name of the company!"))
+            val inputName = strip(input.joinToString(" ").replace("  ", " ").trim().takeIf { it.isNotBlank() } ?: return reply("you must define the name of the company!"))
             val createFee = plugin.companyManager.createFee
 
+            when (val nameAvailable = plugin.companyManager.checkNameAvailability(inputName)) {
+                is None -> {
+                    return reply(nameAvailable.info)
+                }
+            }
 
             val confirmation = object : ConfirmationMenu("Company Creation Cost: &a$$createFee") {
 
@@ -426,7 +430,7 @@ class CommandCompany(override val plugin: Companies)
                 override fun onPass(action: MenuAction) {
                     when (val result = plugin.companyManager.attemptCreate(inputName, player)) {
                         is Some -> {
-                            reply("successfully created your company: $inputName")
+                            reply("successfully created your company: '$inputName'")
                             result.data.hire(staffer)
 
                             plugin.garnishManager.send(player, COMPANY_CREATE_PURCHASE_PASS)
@@ -475,14 +479,13 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("you must be the owner of the company to change the name")
                 }
 
-                val inputName = strip(input.joinToString(" ").takeIf { it.isNotBlank() }
-                                      ?: return@retrieveCompany reply("you must define the new name!"))
+                val inputName = strip(input.joinToString(" ").replace("  ", " ").trim().takeIf { it.isNotBlank() } ?: return@retrieveCompany reply("you must define the new name!"))
                 val renameFee = plugin.companyManager.renameFee
 
-                val max = plugin.configsManager.get(COMPANY_COMMAND_NAME_MAX)
-
-                if (inputName.length > max) {
-                    return@retrieveCompany reply("company name $inputName is too long, must be at most $max")
+                when (val nameAvailable = plugin.companyManager.checkNameAvailability(inputName)) {
+                    is None -> {
+                        return@retrieveCompany reply(nameAvailable.info)
+                    }
                 }
 
                 val confirmation = object : ConfirmationMenu("Company Rename Cost: &a$$renameFee") {
@@ -503,11 +506,14 @@ class CommandCompany(override val plugin: Companies)
 
 
                     override fun onPass(action: MenuAction) {
+                        val oldName = company.name
+
                         when (val result = plugin.companyManager.attemptRename(company, inputName, player)) {
                             is Some -> {
-                                reply("successfully renamed your company to $inputName")
+                                reply("successfully renamed your company to '$inputName'")
 
                                 plugin.garnishManager.send(player, COMPANY_RENAME_PURCHASE_PASS)
+                                plugin.reportsManager.reportPurchaseName(player, renameFee, company, oldName, inputName)
                             }
                             is None -> {
                                 reply("failed to rename company: ${result.info}")
@@ -524,7 +530,6 @@ class CommandCompany(override val plugin: Companies)
                     }
 
                 }
-
 
                 confirmation.open(player)
             }
