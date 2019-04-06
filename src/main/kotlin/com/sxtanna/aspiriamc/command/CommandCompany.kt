@@ -315,9 +315,11 @@ class CommandCompany(override val plugin: Companies)
             plugin.companyManager.top { companies ->
                 var index = 1
                 val reply = companies.joinToString("\n") {
-                    "${index++}. ${it.name} | ${it.finance.balance}"
+                    """
+                        &8&l${index++}. &f${it.name}&r
+                            &8&l| &a${CURRENCIES_FORMAT.format(it.finance.balance)}
+                    """.trimIndent()
                 }
-
                 reply("Top companies are:\n$reply")
             }
         }
