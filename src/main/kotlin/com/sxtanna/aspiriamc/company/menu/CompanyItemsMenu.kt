@@ -15,6 +15,7 @@ import com.sxtanna.aspiriamc.menu.base.Row
 import org.bukkit.Material.*
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType.RIGHT
+import org.bukkit.event.inventory.ClickType.SHIFT_RIGHT
 import java.util.concurrent.TimeUnit
 
 class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null, val adminMode: Boolean = false) : Menu("&nProducts&r &l»&r ${company.name}", Row.R_6) {
@@ -30,15 +31,25 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null,
             val item = buildItemStack(it.createIcon()) {
                 lore = listOf(*(lore ?: emptyList()).toTypedArray(),
                               "",
-                              "&eRight-Click &7to stop selling this item")
+                              "&e${if (adminMode) "Shift + Right-Click" else "Right-Click"} &7to ${if (adminMode) "remove" else "stop selling"} this item")
             }
 
             this[row, col, item] = out@{
-                if (who.uniqueId != it.stafferUUID || how != RIGHT || adminMode) return@out
 
-                when(val attempt = it.attemptBuy()) {
-                    is None -> {
-                        return@out reply("&cfailed to reclaim item: ${attempt.info}")
+
+                if (!adminMode && who.uniqueId != it.stafferUUID) {
+                    return@out // not seller and not admin
+                }
+
+                if ((adminMode && how != SHIFT_RIGHT) || (!adminMode && how != RIGHT)) {
+                    return@out
+                }
+
+                if (!adminMode) {
+                    when (val attempt = it.attemptBuy()) {
+                        is None -> {
+                            return@out reply("&cfailed to reclaim item: ${attempt.info}")
+                        }
                     }
                 }
 
@@ -57,7 +68,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null,
 
                             fresh()
                         } else {
-                            reply("&cfailed to reclaim item: your inventory is full")
+                            reply("&cfailed to ${if (adminMode) "remove" else "reclaim"} item: your inventory is full")
                         }
                     }
                 }
