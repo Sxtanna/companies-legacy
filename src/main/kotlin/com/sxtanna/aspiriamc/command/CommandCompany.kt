@@ -18,7 +18,7 @@ import com.sxtanna.aspiriamc.menu.impl.ConfirmationMenu
 import org.bukkit.Material.AIR
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import java.util.*
+import java.util.UUID
 
 class CommandCompany(override val plugin: Companies)
     : Command("company", "comp") {
@@ -638,6 +638,8 @@ class CommandCompany(override val plugin: Companies)
                 is Some -> {
                     reply("successfully fired employee $name")
                     reply("you have been fired from &e${company.name}&r", findPlayerByUUID(firedStaffer.uuid) ?: return)
+
+                    plugin.reportsManager.reportCompanyFire(firedStaffer.uuid, company, checkNotNull(sender as? Player).uniqueId)
                 }
                 is None -> {
                     reply("failed to fire employee $name: ${result.info}")
@@ -676,6 +678,8 @@ class CommandCompany(override val plugin: Companies)
                         company.onlineStaffers().forEach {
                             reply("player &e${sender.name}&r has resigned from the company", it)
                         }
+
+                        plugin.reportsManager.reportCompanyQuit(checkNotNull(sender as? Player), company)
                     }
                     is None -> {
                         reply("failed to resign: ${result.info.replace("they", "you")}")
@@ -714,6 +718,7 @@ class CommandCompany(override val plugin: Companies)
                 plugin.hiringsManager.attemptStop(company, staffer)
 
                 reply("you have joined &e${company.name}")
+                plugin.reportsManager.reportCompanyHire(checkNotNull(sender as? Player), company)
             }
 
 
@@ -810,8 +815,8 @@ class CommandCompany(override val plugin: Companies)
 
 
         override fun CommandContext.evaluate() {
-            retrieveStaffer("give away a company!") { _, staffer ->
-                processTargeting(staffer)
+            retrieveStaffer("give away a company!") { player, staffer ->
+                processTargeting(player, staffer)
             }
         }
 
@@ -822,7 +827,7 @@ class CommandCompany(override val plugin: Companies)
         }
 
 
-        private fun CommandContext.processTargeting(staffer: Staffer) {
+        private fun CommandContext.processTargeting(player: Player, staffer: Staffer) {
             retrieveCompany(staffer) { company ->
                 if (company.isOwner(staffer.uuid).not()) {
                     return@retrieveCompany reply("you must be the owner of the company to give it to another employee")
@@ -836,12 +841,12 @@ class CommandCompany(override val plugin: Companies)
                 }
 
                 retrieveStafferByUUID(targetData) { targetStaffer ->
-                    processCompanyTransfer(staffer, targetStaffer, company)
+                    processCompanyTransfer(player, staffer, targetStaffer, company)
                 }
             }
         }
 
-        private fun CommandContext.processCompanyTransfer(oldOwner: Staffer, newOwner: Staffer, company: Company) {
+        private fun CommandContext.processCompanyTransfer(player: Player, oldOwner: Staffer, newOwner: Staffer, company: Company) {
 
             company.staffer -= newOwner.uuid
             company.staffer[0] = newOwner.uuid
@@ -850,6 +855,8 @@ class CommandCompany(override val plugin: Companies)
             company.onlineStaffers().forEach {
                 reply("company has been transfered to ${plugin.stafferManager.names[newOwner.uuid]}", it)
             }
+
+            plugin.reportsManager.reportCompanyTransfer(player, company, newOwner.uuid)
         }
 
     }
@@ -941,6 +948,8 @@ class CommandCompany(override val plugin: Companies)
                         when (val result = plugin.companyManager.kill(company)) {
                             is Some -> {
                                 reply("successfully closed your company")
+
+                                plugin.reportsManager.reportCompanyDeletion(player, company)
                             }
                             is None -> {
                                 reply("failed to close your company: ${result.info}")
@@ -1156,6 +1165,8 @@ class CommandCompany(override val plugin: Companies)
                     is Some -> {
                         company.finance.balance -= amount
                         reply("&7successfully withdrawn &a$$amount")
+
+                        plugin.reportsManager.reportCompanyWithdraw(player, company, amount)
                     }
                     is None -> {
                         reply("&cfailed to withdraw &a$$amount&c: ${deposit.info}")

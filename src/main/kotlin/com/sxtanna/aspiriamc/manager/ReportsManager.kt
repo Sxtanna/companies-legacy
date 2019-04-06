@@ -21,7 +21,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.scheduler.BukkitTask
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -105,39 +105,72 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
 
 
     fun reportSellItem(player: Player, product: Product, company: Company) {
-        val report = Reports.SellItem(product.cost, player.uniqueId, product.uuid, company.uuid)
+        val report = Reports.Transaction.SellItem(product.cost, company.uuid, player.uniqueId, product.uuid, product.base)
         plugin.companyDatabase.saveReports(report)
     }
 
     fun reportTakeItem(player: Player, product: Product, company: Company) {
-        val report = Reports.TakeItem(product.cost, player.uniqueId, product.uuid, company.uuid)
+        val report = Reports.Transaction.TakeItem(product.cost, company.uuid, player.uniqueId, product.uuid, product.base)
         plugin.companyDatabase.saveReports(report)
     }
 
+
     fun reportPurchaseComp(player: Player, createFee: Double, company: Company) {
-        val report = Reports.Purchase.Comp(createFee, player.uniqueId, company.uuid, company.name)
+        val report = Reports.Transaction.Purchase.Comp(createFee, company.uuid, player.uniqueId, company.name)
         plugin.companyDatabase.saveReports(report)
     }
 
     fun reportPurchaseName(player: Player, renameFee: Double, company: Company, oldName: String, newName: String) {
-        val report = Reports.Purchase.Name(renameFee, player.uniqueId, company.uuid, oldName, newName)
+        val report = Reports.Transaction.Purchase.Name(renameFee, company.uuid, player.uniqueId, oldName, newName)
         plugin.companyDatabase.saveReports(report)
     }
 
     fun reportPurchaseIcon(player: Player, iconFee: Double, company: Company, oldType: Material, newType: Material) {
-        val report = Reports.Purchase.Icon(iconFee, player.uniqueId, company.uuid, oldType, newType)
+        val report = Reports.Transaction.Purchase.Icon(iconFee, company.uuid, player.uniqueId, oldType, newType)
         plugin.companyDatabase.saveReports(report)
     }
 
-    fun reportPurchaseItem(product: Product, company: Company, player: Player, transactions: Map<UUID, Double>) {
-        val report = Reports.Purchase.Item(product.cost, product.stafferUUID ?: UUID.randomUUID(), player.uniqueId, product.base, product.uuid, company.uuid, transactions)
+    fun reportPurchaseItem(player: Player, product: Product, company: Company, transactions: Map<UUID, Double>) {
+        val report = Reports.Transaction.Purchase.Item(product.cost, company.uuid, product.stafferUUID ?: UUID.randomUUID(), player.uniqueId, product.base, product.uuid, transactions)
         plugin.companyDatabase.saveReports(report)
     }
 
 
-    fun purchasesFromPast(company: Company, time: Long, unit: TimeUnit, onLoad: (List<Reports.Purchase.Item>) -> Unit) {
+    fun reportCompanyHire(player: Player, company: Company) {
+        val report = Reports.Staffing.Hire(company.uuid, player.uniqueId)
+        plugin.companyDatabase.saveReports(report)
+    }
+
+    fun reportCompanyFire(player: UUID, company: Company, firedBy: UUID) {
+        val report = Reports.Staffing.Fire(company.uuid, player, firedBy)
+        plugin.companyDatabase.saveReports(report)
+    }
+
+    fun reportCompanyQuit(player: Player, company: Company) {
+        val report = Reports.Staffing.Quit(company.uuid, player.uniqueId)
+        plugin.companyDatabase.saveReports(report)
+    }
+
+
+    fun reportCompanyWithdraw(player: Player, company: Company, amount: Double) {
+        val report = Reports.Withdraw(company.uuid, player.uniqueId, amount)
+        plugin.companyDatabase.saveReports(report)
+    }
+
+    fun reportCompanyTransfer(player: Player, company: Company, toPlayer: UUID) {
+        val report = Reports.Transfer(company.uuid, player.uniqueId, toPlayer)
+        plugin.companyDatabase.saveReports(report)
+    }
+
+    fun reportCompanyDeletion(player: Player, company: Company) {
+        val report = Reports.Deletion(company.uuid, player.uniqueId)
+        plugin.companyDatabase.saveReports(report)
+    }
+
+
+    fun purchasesFromPast(company: Company, time: Long, unit: TimeUnit, onLoad: (List<Reports.Transaction.Purchase.Item>) -> Unit) {
         plugin.companyDatabase.loadReports(PURCHASE_ITEM, System.currentTimeMillis() - (MILLISECONDS.convert(time, unit))) { reports ->
-            val output = reports.filterIsInstance<Reports.Purchase.Item>().filter { it.idComp == company.uuid }
+            val output = reports.filterIsInstance<Reports.Transaction.Purchase.Item>().filter { it.idComp == company.uuid }
 
             onLoad.invoke(output)
         }
@@ -169,8 +202,7 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
             val transactions = mapOf(company.uuid to tariffs,
                                      stafferUUID to payouts)
 
-            reportPurchaseItem(product, company, buyer, transactions)
-            return
+            return reportPurchaseItem(buyer, product, company, transactions)
         }
 
         revenue /= company.staffer.size - 1

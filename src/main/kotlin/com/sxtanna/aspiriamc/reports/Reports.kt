@@ -4,7 +4,10 @@ import com.sxtanna.aspiriamc.base.Result
 import com.sxtanna.aspiriamc.base.Unique
 import com.sxtanna.aspiriamc.reports.Format.*
 import com.sxtanna.aspiriamc.reports.Reports.Codec
-import com.sxtanna.aspiriamc.reports.Reports.Purchase.*
+import com.sxtanna.aspiriamc.reports.Reports.Staffing.*
+import com.sxtanna.aspiriamc.reports.Reports.Transaction.Purchase.*
+import com.sxtanna.aspiriamc.reports.Reports.Transaction.SellItem
+import com.sxtanna.aspiriamc.reports.Reports.Transaction.TakeItem
 import com.sxtanna.korm.Korm
 import com.sxtanna.korm.base.KormPuller
 import com.sxtanna.korm.data.KormType
@@ -12,7 +15,7 @@ import com.sxtanna.korm.data.custom.KormCustomPull
 import com.sxtanna.korm.reader.KormReader.ReaderContext
 import org.bukkit.Material
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 @KormCustomPull(Codec::class)
 sealed class Reports : Unique<UUID> {
@@ -23,52 +26,105 @@ sealed class Reports : Unique<UUID> {
 
     val occurredAt = Instant.now().toEpochMilli()
 
+
     abstract val format: Format
-    abstract val amount: Double
 
 
     object None : Reports() {
 
         override val format = NONE
-        override val amount = -1.0
 
     }
 
-    data class SellItem(override val amount: Double, val by: UUID, val idItem: UUID, val idComp: UUID) : Reports() {
 
-        override val format = SELL_ITEM
+    data class Deletion(val idComp: UUID, val by: UUID) : Reports() {
 
-    }
-
-    data class TakeItem(override val amount: Double, val to: UUID, val idItem: UUID, val idComp: UUID) : Reports() {
-
-        override val format = TAKE_ITEM
+        override val format = COMPANY_DELETION
 
     }
 
-    sealed class Purchase : Reports() {
+    data class Withdraw(val idComp: UUID, val to: UUID, val amount: Double) : Reports() {
 
-        data class Comp(override val amount: Double, val by: UUID, val idComp: UUID, val named: String) : Purchase() {
+        override val format = COMPANY_WITHDRAW
 
-            override val format = PURCHASE_COMP
+    }
+
+    data class Transfer(val idComp: UUID, val by: UUID, val to: UUID) : Reports() {
+
+        override val format = COMPANY_TRANSFER
+
+    }
+
+
+    sealed class Transaction : Reports() {
+
+        abstract val amount: Double
+        abstract val idComp: UUID
+
+
+        data class SellItem(override val amount: Double, override val idComp: UUID, val by: UUID, val idItem: UUID, val base: String? = null) : Transaction() {
+
+            override val format = SELL_ITEM
 
         }
 
-        data class Icon(override val amount: Double, val by: UUID, val idComp: UUID, val oldType: Material, val newType: Material) : Purchase() {
+        data class TakeItem(override val amount: Double, override val idComp: UUID, val to: UUID, val idItem: UUID, val base: String? = null) : Transaction() {
 
-            override val format = PURCHASE_ICON
-
-        }
-
-        data class Item(override val amount: Double, val from: UUID, val into: UUID, val base: String, val idItem: UUID, val idComp: UUID, val transactions: Map<UUID, Double>) : Purchase() {
-
-            override val format = PURCHASE_ITEM
+            override val format = TAKE_ITEM
 
         }
 
-        data class Name(override val amount: Double, val by: UUID, val idComp: UUID, val oldName: String, val newName: String) : Purchase() {
+        sealed class Purchase : Transaction() {
 
-            override val format = PURCHASE_NAME
+            data class Comp(override val amount: Double, override val idComp: UUID, val by: UUID, val named: String) : Purchase() {
+
+                override val format = PURCHASE_COMP
+
+            }
+
+            data class Icon(override val amount: Double, override val idComp: UUID, val by: UUID, val oldType: Material, val newType: Material) : Purchase() {
+
+                override val format = PURCHASE_ICON
+
+            }
+
+            data class Item(override val amount: Double, override val idComp: UUID, val from: UUID, val into: UUID, val base: String, val idItem: UUID, val transactions: Map<UUID, Double>) : Purchase() {
+
+                override val format = PURCHASE_ITEM
+
+            }
+
+            data class Name(override val amount: Double, override val idComp: UUID, val by: UUID, val oldName: String, val newName: String) : Purchase() {
+
+                override val format = PURCHASE_NAME
+
+            }
+
+        }
+
+    }
+
+    sealed class Staffing : Reports() {
+
+        abstract val idComp: UUID
+        abstract val idUser: UUID
+
+
+        data class Hire(override val idComp: UUID, override val idUser: UUID) : Staffing() {
+
+            override val format = COMPANY_STAFF_HIRE
+
+        }
+
+        data class Fire(override val idComp: UUID, override val idUser: UUID, val idFiredBy: UUID) : Staffing() {
+
+            override val format = COMPANY_STAFF_FIRE
+
+        }
+
+        data class Quit(override val idComp: UUID, override val idUser: UUID) : Staffing() {
+
+            override val format = COMPANY_STAFF_QUIT
 
         }
 
@@ -99,6 +155,24 @@ sealed class Reports : Unique<UUID> {
                 }
                 PURCHASE_NAME -> {
                     reader.mapInstance(Name::class, types)
+                }
+                COMPANY_DELETION -> {
+                    reader.mapInstance(Deletion::class, types)
+                }
+                COMPANY_WITHDRAW -> {
+                    reader.mapInstance(Withdraw::class, types)
+                }
+                COMPANY_TRANSFER -> {
+                    reader.mapInstance(Transfer::class, types)
+                }
+                COMPANY_STAFF_HIRE -> {
+                    reader.mapInstance(Hire::class, types)
+                }
+                COMPANY_STAFF_FIRE -> {
+                    reader.mapInstance(Fire::class, types)
+                }
+                COMPANY_STAFF_QUIT -> {
+                    reader.mapInstance(Quit::class, types)
                 }
             }
         }

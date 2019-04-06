@@ -12,4 +12,12 @@ enum class Format {
     PURCHASE_ITEM, // when they purchase an item
     PURCHASE_NAME, // when they rename their company
 
+    COMPANY_DELETION, // when they close their company
+    COMPANY_TRANSFER, // when they transfer the company to someone
+    COMPANY_WITHDRAW, // when they withdraw money from the company
+
+    COMPANY_STAFF_HIRE, // when they hire a staffer
+    COMPANY_STAFF_FIRE, // when they fire a staffer
+    COMPANY_STAFF_QUIT, // when a staffer quits the company
+
 }
