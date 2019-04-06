@@ -13,12 +13,12 @@ repositories {
     mavenCentral()
     
     def repoUrls = [
+            // libraries
+            "http://nexus.hc.to/content/repositories/pub_releases",
+
             // minecraft
             "https://papermc.io/repo/repository/maven-public/",
             "https://oss.sonatype.org/content/repositories/snapshots",
-
-            // libraries
-            "http://nexus.hc.to/content/repositories/pub_releases"
     ]
 
     repoUrls.forEach { repoUrl ->
