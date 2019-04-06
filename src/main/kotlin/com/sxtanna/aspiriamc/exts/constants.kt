@@ -4,6 +4,7 @@ import org.bukkit.DyeColor
 import org.bukkit.Material
 import org.bukkit.Material.*
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.util.EnumSet
 import java.util.UUID
 
@@ -13,6 +14,7 @@ const val BACK = "&c← Click to go back"
 internal val SXTANNA_UUID = UUID.fromString("41d1fed5-aa44-432c-ab1b-2810001f3270")
 
 internal val CURRENCIES_FORMAT = NumberFormat.getCurrencyInstance()
+internal val TIMESTAMPS_FORMAT = SimpleDateFormat("MMM dd | hh:mm aa")
 
 internal val COLOR_MATERIAL_ASSOCIATIONS = mapOf<DyeColor, Set<Material>>(
     DyeColor.WHITE to EnumSet

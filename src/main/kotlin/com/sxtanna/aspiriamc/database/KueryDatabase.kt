@@ -8,6 +8,7 @@ import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.DEF_KORM
 import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.EXECUTOR
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.exts.ensureUsable
+import com.sxtanna.aspiriamc.metrics.Metrics
 import com.sxtanna.aspiriamc.reports.Format
 import com.sxtanna.aspiriamc.reports.Reports
 import com.sxtanna.db.Kuery
@@ -301,6 +302,17 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
         override fun toData(): Reports {
             return Reports.Maker.make(DEF_KORM, data)
+        }
+
+    }
+
+    internal data class InDBMetrics(@PrimaryKey
+                                    val uuid: UUID)
+        : InDBData<Metrics> {
+
+
+        override fun toData(): Metrics {
+            return Metrics()
         }
 
     }

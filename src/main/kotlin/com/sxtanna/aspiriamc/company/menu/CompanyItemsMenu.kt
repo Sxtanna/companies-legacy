@@ -84,10 +84,10 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null,
                           "&7Employees: &a${company.staffer.size}",
                           "",
                           "&fMoney",
-                          "&7Company Vault: &a$${company.finance.balance}",
+                          "&7Company Vault: &a${CURRENCIES_FORMAT.format(company.finance.balance)}",
                           "&7Company Tax: &a${company.finance.tariffs}&7%",
-                          "&7Total Revenue: &a$${company.finance.account.values.sumByDouble { it.playerProfit }.formatToTwoPlaces()}",
-                          "&7Total Employee Earnings: &a$${company.finance.account.values.sumByDouble { it.playerPayout }.formatToTwoPlaces()}")
+                          "&7Total Revenue: &a${CURRENCIES_FORMAT.format(company.finance.account.values.sumByDouble { it.playerProfit })}",
+                          "&7Total Employee Earnings: &a${CURRENCIES_FORMAT.format(company.finance.account.values.sumByDouble { it.playerPayout })}")
         }
 
         this[Row.R_6, Col.C_1, statsButton] = {}

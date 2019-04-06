@@ -2,6 +2,7 @@ package com.sxtanna.aspiriamc.company.menu
 
 import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.config.Garnish.*
+import com.sxtanna.aspiriamc.exts.CURRENCIES_FORMAT
 import com.sxtanna.aspiriamc.exts.buildItemStack
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
@@ -107,8 +108,8 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null,
                 "&7Items Selling: &a${company.product.count { it.stafferUUID == uuid }}",
                 "",
                 "&7Payout Ratio: &a${account.payoutRatio}&7%",
-                "&7Player Earnings: &a$${account.playerPayout}",
-                "&7Player Earnings for Company: &a$${account.playerProfit}",
+                "&7Player Earnings: &a$${CURRENCIES_FORMAT.format(account.playerPayout)}",
+                "&7Player Earnings for Company: &a$${CURRENCIES_FORMAT.format(account.playerProfit)}",
                 "",
                 "&eLeft-Click&7 to decrease payout percentage",
                 "&eRight-Click&7 to increase payout percentage"

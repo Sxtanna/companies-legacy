@@ -41,12 +41,12 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                     }
                 }
 
-                val confirmation = object : ConfirmationMenu("Cost: &a$${it.cost.toReadableString()}") {
+                val confirmation = object : ConfirmationMenu("Cost: &a${it.cost.toReadableString()}") {
 
                     override fun passLore(): List<String> {
                         return listOf(
                             "",
-                            "&7Buy &a${icon.itemMeta?.displayName} &7for &a$${it.cost.toReadableString()}"
+                            "&7Buy &a${icon.itemMeta?.displayName} &7for &a${it.cost.toReadableString()}"
                                      )
                     }
 
@@ -73,7 +73,7 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                                     this@ChosenCompanyMarketMenu.fresh()
                                     this@ChosenCompanyMarketMenu.open(action.who)
 
-                                    reply("&fsuccessfully purchased &e${if (item.data.type.maxStackSize == 1) "" else "${item.data.amount} "}${itemStackName(item.data)}&r for &a$${it.cost.toReadableString()}")
+                                    reply("&fsuccessfully purchased &e${if (item.data.type.maxStackSize == 1) "" else "${item.data.amount} "}${itemStackName(item.data)}&r for &a${it.cost.toReadableString()}")
                                     it.startBoughtLock()
                                     return
                                 } else {

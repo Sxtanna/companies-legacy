@@ -3,10 +3,7 @@ package com.sxtanna.aspiriamc.company.menu
 import com.sxtanna.aspiriamc.base.Result.None
 import com.sxtanna.aspiriamc.base.Result.Some
 import com.sxtanna.aspiriamc.company.Company
-import com.sxtanna.aspiriamc.exts.base64ToItemStack
-import com.sxtanna.aspiriamc.exts.buildItemStack
-import com.sxtanna.aspiriamc.exts.formatToTwoPlaces
-import com.sxtanna.aspiriamc.exts.properName
+import com.sxtanna.aspiriamc.exts.*
 import com.sxtanna.aspiriamc.menu.Menu
 import com.sxtanna.aspiriamc.menu.base.Col
 import com.sxtanna.aspiriamc.menu.base.Row
@@ -46,7 +43,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
             val icon = buildItemStack(item) {
                 lore = listOf(*(lore ?: listOf("")).toTypedArray(),
                               "&8&m                       ",
-                              "&7Cost: &a$${it.amount}",
+                              "&7Cost: &a${CURRENCIES_FORMAT.format(it.amount)}",
                               "&7Sold By: ${it.from.let(company.plugin.stafferManager.names::get)}",
                               "&7Bought By: ${it.into.let(company.plugin.stafferManager.names::get)}",
                               "&8&m                       ",
@@ -75,7 +72,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
     private fun transactionData(report: Reports.Transaction.Purchase.Item): Array<String> {
         val transactions = report.transactions.entries.toList()
 
-        var data = transactions.take(3).mapNotNull {
+        val data = transactions.take(3).mapNotNull {
             val name = if (it.key == company.uuid) company.name else company.plugin.stafferManager.names[it.key]
             val data = it.value.formatToTwoPlaces()
 
@@ -83,16 +80,12 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
                 return@mapNotNull null
             }
 
-            "&f$name: &a+$$data"
-        }
+            "&f$name: &a+$${CURRENCIES_FORMAT.format(data)}"
+        }.toMutableList()
 
         if (data.size < transactions.size && (transactions.size - data.size) > 1) {
-            val mutable = data.toMutableList()
-
-            mutable += ""
-            mutable +="&7and ${transactions.size - data.size} more..."
-
-            data = mutable
+            data += ""
+            data += "&7and ${transactions.size - data.size} more..."
         }
 
         return data.toTypedArray()

@@ -115,7 +115,7 @@ class Product : Named, Unique<UUID>, Iconable, Searchable {
                 loreLines += listOf(
                     "",
                     "&8&m                       ",
-                    "&7Cost: &a$$cost",
+                    "&7Cost: &a${CURRENCIES_FORMAT.format(cost)}",
                     "&7Sold By: ${stafferUUID?.let(plugin.stafferManager.names::get) ?: "Unknown"}")
 
                 lore = loreLines

@@ -416,11 +416,11 @@ class CommandCompany(override val plugin: Companies)
                 }
             }
 
-            val confirmation = object : ConfirmationMenu("Company Creation Cost: &a$$createFee") {
+            val confirmation = object : ConfirmationMenu("Company Creation Cost: &a${CURRENCIES_FORMAT.format(createFee)}") {
 
                 override fun passLore(): List<String> {
                     return listOf("",
-                                  "&7Create company '$inputName' for &a$$createFee")
+                                  "&7Create company '$inputName' for &a${CURRENCIES_FORMAT.format(createFee)}")
                 }
 
                 override fun failLore(): List<String> {
@@ -490,7 +490,7 @@ class CommandCompany(override val plugin: Companies)
                     }
                 }
 
-                val confirmation = object : ConfirmationMenu("Company Rename Cost: &a$$renameFee") {
+                val confirmation = object : ConfirmationMenu("Company Rename Cost: &a${CURRENCIES_FORMAT.format(renameFee)}") {
 
                     override fun passLore(): List<String> {
                         return listOf(
@@ -995,15 +995,18 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("you must be the owner of the company to change the icon")
                 }
 
-                val item = player.inventory.itemInMainHand ?: return@retrieveCompany reply("you must be holding the item you want to use")
+                val item = player.inventory.itemInMainHand
+                if (item.type == AIR) {
+                    return@retrieveCompany reply("you must be holding the item you want to use")
+                }
 
                 val iconFee = plugin.marketsManager.iconFee
 
-                val confirmation = object : ConfirmationMenu("Company Icon Cost: &a$$iconFee") {
+                val confirmation = object : ConfirmationMenu("Company Icon Cost: &a${CURRENCIES_FORMAT.format(iconFee)}") {
 
                     override fun passLore(): List<String> {
                         return listOf("",
-                                      "&7Change company icon to ${itemStackName(item)} for &a$$iconFee")
+                                      "&7Change company icon to ${itemStackName(item)} for &a${CURRENCIES_FORMAT.format(iconFee)}")
                     }
 
                     override fun failLore(): List<String> {
@@ -1081,7 +1084,7 @@ class CommandCompany(override val plugin: Companies)
 
                 company.product += product
 
-                reply("now selling &e${if (item.type.maxStackSize == 1) "" else "${item.amount} "}${itemStackName(item)}&r for &a$$cost")
+                reply("now selling &e${if (item.type.maxStackSize == 1) "" else "${item.amount} "}${itemStackName(item)}&r for &a${CURRENCIES_FORMAT.format(cost)}")
 
 
                 plugin.reportsManager.reportSellItem(player, product, company)
@@ -1160,18 +1163,18 @@ class CommandCompany(override val plugin: Companies)
                 }
 
                 if (amount > company.finance.balance) {
-                    return@retrieveCompany reply("&a$$amount &7is greater than your company's balance of &a$${company.finance.balance}")
+                    return@retrieveCompany reply("&a${CURRENCIES_FORMAT.format(amount)} &7is greater than your company's balance of &a${CURRENCIES_FORMAT.format(company.finance.balance)}")
                 }
 
                 when (val deposit = plugin.economyHook.attemptGive(player, amount)) {
                     is Some -> {
                         company.finance.balance -= amount
-                        reply("&7successfully withdrawn &a$$amount")
+                        reply("&7successfully withdrawn &a${CURRENCIES_FORMAT.format(amount)}")
 
                         plugin.reportsManager.reportCompanyWithdraw(player, company, amount)
                     }
                     is None -> {
-                        reply("&cfailed to withdraw &a$$amount&c: ${deposit.info}")
+                        reply("&cfailed to withdraw &a${CURRENCIES_FORMAT.format(amount)}&c: ${deposit.info}")
                     }
                 }
             }

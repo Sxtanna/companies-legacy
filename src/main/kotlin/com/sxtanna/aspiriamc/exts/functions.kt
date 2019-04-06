@@ -49,7 +49,7 @@ fun String.ownership(): String {
 }
 
 fun Double.toReadableString(): String {
-    return toBigDecimal().toPlainString()
+    return CURRENCIES_FORMAT.format(this)
 }
 
 fun Double.formatToTwoPlaces(): Double {
