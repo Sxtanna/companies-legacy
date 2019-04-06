@@ -1071,7 +1071,7 @@ class CommandCompany(override val plugin: Companies)
                     return@retrieveCompany reply("maximum of ${plugin.marketsManager.itemMax} products can be sold at a time")
                 }
 
-                player.inventory.itemInMainHand = null
+                player.inventory.setItemInMainHand(null)
 
                 val product = Product().updateData(staffer, item, System.currentTimeMillis(), cost).apply {
                     this.plugin = company.plugin

@@ -10,7 +10,7 @@ import org.bukkit.Material.*
 import org.bukkit.event.inventory.ClickType.MIDDLE
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
-import java.util.*
+import java.util.UUID
 
 class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null, val adminMode: Boolean = false) : Menu("&n${if (adminMode) "Viewing" else "Manage"}&r &l»&r ${company.name}", Row.R_4) {
 
@@ -18,7 +18,7 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null,
 
 
     private val resetButton = buildItemStack(REDSTONE_BLOCK) {
-        displayName = "&eEmployee Percentages"
+        setDisplayName("&eEmployee Percentages")
         lore = listOf(
             "&7Employee percentages determine what",
             "&7amount of money an employee gets when",
@@ -80,7 +80,7 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null,
         if (adminMode.not()) return
 
         val button = buildItemStack(SIGN) {
-            displayName =  "&fView items being sold"
+            setDisplayName("&fView items being sold")
         }
 
         this[Row.R_4, Col.C_1, button] = out@ {
@@ -101,7 +101,7 @@ class CompanyAdminMenu(private val company: Company, val prevMenu: Menu? = null,
         val display = company.plugin.stafferManager.names[uuid]
 
         return buildItemStack(PLAYER_HEAD) {
-            displayName = "&f$display "
+            setDisplayName("&f$display ")
             lore = listOf(
                 "&7Items Sold: &a${account.itemsSold}",
                 "&7Items Selling: &a${company.product.count { it.stafferUUID == uuid }}",

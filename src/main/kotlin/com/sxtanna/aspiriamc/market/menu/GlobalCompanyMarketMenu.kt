@@ -114,7 +114,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
 
     private fun setupCompanyFilter() {
         val button = buildItemStack(HOPPER) {
-            displayName = "&fFilter items"
+            setDisplayName("&fFilter items")
         }
 
         this[Row.R_6, Col.C_1, button] = {
@@ -126,7 +126,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         val company = plugin.quickAccessCompanyByStafferUUID(player.uniqueId) ?: return setupVoidsButton(player)
 
         val button = buildItemStack(EMERALD) {
-            displayName = "&fView Company&e ${company.name}"
+            setDisplayName("&fView Company&e ${company.name}")
 
             lore = listOf("&7Items Selling: &a${company.product.size}",
                           "&7Employees: &a${company.staffer.size}",
@@ -145,7 +145,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
         val staffer = plugin.quickAccessStaffer(player.uniqueId)?.takeIf { it.voidedItems.isNotEmpty() } ?: return
 
         val button = buildItemStack(STRUCTURE_VOID) {
-            displayName = "&fView your voided items"
+            setDisplayName("&fView your voided items")
 
             lore = listOf(
                 "&7Items Voided: &a${staffer.voidedItems.size}"
@@ -179,7 +179,7 @@ class GlobalCompanyMarketMenu(val plugin: Companies, val prevMenu: Menu? = null)
 
     private fun createEmptySponsorSlot(): ItemStack {
         return buildItemStack(GRAY_STAINED_GLASS_PANE) {
-            displayName = "&eSponsor Slot"
+            setDisplayName("&eSponsor Slot")
             lore = listOf(
                 "",
                 "&fBuy a sponsor slot for: &a${plugin.companyManager.sponsorManager.humanReadableTime()}",

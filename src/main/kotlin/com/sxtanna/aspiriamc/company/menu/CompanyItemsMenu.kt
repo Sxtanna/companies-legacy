@@ -60,8 +60,6 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null,
                             reply("&cfailed to reclaim item: your inventory is full")
                         }
                     }
-                    is None -> { /* SOL my dude*/
-                    }
                 }
             }
         }
@@ -69,7 +67,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null,
         pagination.init()
 
         val statsButton = buildItemStack(BOOK) {
-            displayName = "&f${company.name}"
+            setDisplayName("&f${company.name}")
 
             lore = listOf("&7Items Selling: &a${company.product.size}",
                           "&7Employees: &a${company.staffer.size}",
@@ -109,7 +107,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null,
         val unit = company.plugin.configsManager.get(COMPANY_HISTORY_UNIT)
 
         val button = buildItemStack(SIGN) {
-            displayName =  "&fView past &9$time&f ${unit.properName()} of purchases"
+            setDisplayName("&fView past &9$time&f ${unit.properName()} of purchases")
         }
 
         this[Row.R_6, Col.C_2, button] = out@ {
@@ -126,7 +124,7 @@ class CompanyItemsMenu(private val company: Company, val prevMenu: Menu? = null,
         if (company.isOwner(player.uniqueId).not()) return
 
         val button = buildItemStack(REPEATING_COMMAND_BLOCK) {
-            displayName = "&fManage Company&e ${company.name}"
+            setDisplayName("&fManage Company&e ${company.name}")
         }
 
         this[Row.R_6, Col.C_9, button] = {

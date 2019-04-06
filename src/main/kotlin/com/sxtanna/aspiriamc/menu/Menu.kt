@@ -19,7 +19,7 @@ import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import java.util.*
+import java.util.UUID
 
 abstract class Menu(title: String, private val rows: Row) : InventoryHolder {
 
@@ -134,7 +134,7 @@ abstract class Menu(title: String, private val rows: Row) : InventoryHolder {
         if (prevMenu == null) return
 
         val backButton = buildItemStack(BARRIER) {
-            displayName = BACK
+            setDisplayName(BACK)
         }
 
         this[row, col, backButton] = {
@@ -181,13 +181,13 @@ abstract class Menu(title: String, private val rows: Row) : InventoryHolder {
 
         protected open val prevStack: ItemStack
             get() = buildItemStack(PAPER) {
-                displayName = "&aLast Page"
+                setDisplayName("&aLast Page")
                 lore = listOf("    &a&m<    ", "", "&7You are on page:&f ${index + 1}")
             }
 
         protected open val nextStack: ItemStack
             get() = buildItemStack(PAPER) {
-                displayName = "&aNext Page"
+                setDisplayName("&aNext Page")
                 lore = listOf("    &a&m    >", "", "&7You are on page:&f ${index + 1}")
             }
 

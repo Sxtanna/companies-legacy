@@ -13,7 +13,7 @@ import com.sxtanna.aspiriamc.exts.*
 import org.bukkit.Material.BARRIER
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
-import java.util.*
+import java.util.UUID
 
 class Product : Named, Unique<UUID>, Iconable, Searchable {
 
@@ -104,12 +104,12 @@ class Product : Named, Unique<UUID>, Iconable, Searchable {
                     name = itemStackName(item.data)
                 }
 
-                displayName = "${if (item.data.type.maxStackSize == 1) "" else "&a${item.data.amount} "}&f$name"
+                setDisplayName("${if (item.data.type.maxStackSize == 1) "" else "&a${item.data.amount} "}&f$name")
 
                 val loreLines = mutableListOf<String>()
 
-                if (item.data.hasItemMeta() && item.data.itemMeta.hasLore()) {
-                    loreLines += item.data.itemMeta.lore
+                if (item.data.hasItemMeta() && item.data.itemMeta?.hasLore() == true) {
+                    loreLines += item.data.itemMeta?.lore ?: emptyList()
                 }
 
                 loreLines += listOf(
@@ -121,7 +121,7 @@ class Product : Named, Unique<UUID>, Iconable, Searchable {
                 lore = loreLines
             }
             is None -> buildItemStack(BARRIER) {
-                displayName = "&4&lINVALID ITEM OMG SPOOKY"
+                setDisplayName("&4&lINVALID ITEM OMG SPOOKY")
             }
         }
     }

@@ -96,7 +96,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
         val kinds = buildItemStack(COMMAND_BLOCK) {
             hideEverything()
 
-            displayName = "&eItem Options"
+            setDisplayName("&eItem Options")
 
             val kinds = queries.filterIsInstance<Kinds>().filter(Query::enabled)
 
@@ -127,7 +127,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
         val execButton = buildItemStack(EMERALD_BLOCK) {
             hideEverything()
 
-            displayName = "&fExecute filter"
+            setDisplayName("&fExecute filter")
 
             val enabled = queries.filter(Query::enabled)
 
@@ -209,8 +209,8 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
                 val icon = it.createIcon()
 
-                icon.itemMeta = icon.itemMeta.apply {
-                    lore = listOf(*lore.toTypedArray(),
+                icon.itemMeta = icon.itemMeta?.apply {
+                    lore = listOf(*(lore ?: listOf("")).toTypedArray(),
                                   color("&7Company: ${plugin.quickAccessCompanyByCompanyUUID(it.companyUUID)?.name ?: "Unknown"}"))
                 }
 
@@ -231,7 +231,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
                         override fun passLore(): List<String> {
                             return listOf(
                                 "",
-                                "&7Buy &a${icon.itemMeta.displayName} &7for &a$${it.cost}"
+                                "&7Buy &a${icon.itemMeta?.displayName} &7for &a$${it.cost}"
                                          )
                         }
 
@@ -404,7 +404,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
                 val icon = buildItemStack(it) {
                     hideEverything()
 
-                    displayName = "&f${it.properName()}"
+                    setDisplayName("&f${it.properName()}")
                 }
 
                 this[row, col, icon] = {
@@ -423,7 +423,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             initBackButton(this@FilterCompanyMarketMenu, plugin, Row.R_6, Col.C_5)
 
             val clearItem = buildItemStack(REDSTONE_BLOCK) {
-                displayName = "&cReset to nothing"
+                setDisplayName("&cReset to nothing")
             }
 
             this[Row.R_6, Col.C_1, clearItem] = {
@@ -467,7 +467,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
             val numbers = Array(10) {
                 buildItemStack(GRAY_DYE, 1) {
-                    displayName = "&f&l$it"
+                    setDisplayName("&f&l$it")
                 }
             }
 
@@ -519,14 +519,14 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
 
             val cancel = buildItemStack(BARRIER) {
-                displayName = "&cCancel"
+                setDisplayName("&cCancel")
             }
 
             val delete = buildItemStack(REDSTONE_BLOCK) {
-                displayName = "&cBackspace"
+                setDisplayName("&cBackspace")
             }
             val accept = buildItemStack(EMERALD_BLOCK) {
-                displayName = "&aAccept"
+                setDisplayName("&aAccept")
             }
 
             this[Row.R_6, Col.C_1, cancel] = {
@@ -573,7 +573,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
         private fun refreshDisplay() {
             val display = buildItemStack(GHAST_TEAR) {
-                displayName = "&fCurrent"
+                setDisplayName("&fCurrent")
 
                 lore = listOf("",
                               "&f${if (cost.type == ABOVE) "More Than" else " Less Than"}",
@@ -583,7 +583,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             this[Row.R_3, Col.C_3, display] = {}
 
             val direct = buildItemStack(LAPIS_BLOCK) {
-                displayName = "&bToggle Direction"
+                setDisplayName("&bToggle Direction")
 
                 lore = listOf("",
                               "&f${if (cost.type == ABOVE) "More Than" else "Less Than"}")
@@ -620,10 +620,10 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             refreshDisplay()
 
             val decrease = buildItemStack(RED_WOOL) {
-                displayName = "&fDecrease Count"
+                setDisplayName("&fDecrease Count")
             }
             val increase = buildItemStack(GREEN_WOOL) {
-                displayName = "&fIncrease Count"
+                setDisplayName("&fIncrease Count")
             }
 
             this[Row.R_2, Col.C_4, decrease] = {
@@ -636,10 +636,10 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             }
 
             val cancel = buildItemStack(REDSTONE_BLOCK) {
-                displayName = "&cCancel filter"
+                setDisplayName("&cCancel filter")
             }
             val accept = buildItemStack(EMERALD_BLOCK) {
-                displayName = "&aAccept filter"
+                setDisplayName("&aAccept filter")
             }
 
             this[Row.R_3, Col.C_1, cancel] = {
@@ -672,7 +672,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
         private fun refreshDisplay() {
             val display = buildItemStack(STONE, count.count.coerceIn(1, 64)) {
-                displayName = "&fCurrent"
+                setDisplayName("&fCurrent")
                 lore = listOf("  &a${count.count}")
             }
 
@@ -684,8 +684,8 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
     inner class ColorSelectionMenu(val plugin: Companies) : Menu("&nSelect The Color", Row.R_6) {
 
         private val colors = DyeColor.values().associate {
-            it to buildItemStack(Material.getMaterial("${it.name}_WOOL")) {
-                displayName = "&f${it.properName()}"
+            it to buildItemStack(Material.getMaterial("${it.name}_WOOL") ?: WHITE_WOOL) {
+                setDisplayName("&f${it.properName()}")
             }
         }
 
@@ -716,7 +716,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             initBackButton(this@FilterCompanyMarketMenu, plugin, Row.R_6, Col.C_5)
 
             val clearItem = buildItemStack(REDSTONE_BLOCK) {
-                displayName = "&cReset to nothing"
+                setDisplayName("&cReset to nothing")
             }
 
             this[Row.R_6, Col.C_1, clearItem] = {
@@ -781,7 +781,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             initBackButton(this@FilterCompanyMarketMenu, plugin, Row.R_6, Col.C_5)
 
             val clearItem = buildItemStack(REDSTONE_BLOCK) {
-                displayName = "&cReset to nothing"
+                setDisplayName("&cReset to nothing")
             }
 
             this[Row.R_6, Col.C_1, clearItem] = {
@@ -820,7 +820,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
                 return buildItemStack(type) {
                     hideEverything()
 
-                    displayName = "&e$name"
+                    setDisplayName("&e$name")
 
                     val loreLines = loreLinesFor(*enchantments)
 
@@ -834,7 +834,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
             protected fun initNoneButton(menu: Menu, row: Row, col: Col, vararg enchantments: Enchantment) {
                 val clearItem = buildItemStack(REDSTONE_BLOCK) {
-                    displayName = "&cReset to nothing"
+                    setDisplayName("&cReset to nothing")
                 }
 
                 this[row, col, clearItem] = {
@@ -1083,10 +1083,10 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             refreshDisplay()
 
             val decrease = buildItemStack(RED_WOOL) {
-                displayName = "&fDecrease Level"
+                setDisplayName("&fDecrease Level")
             }
             val increase = buildItemStack(GREEN_WOOL) {
-                displayName = "&fIncrease Level"
+                setDisplayName("&fIncrease Level")
             }
 
             this[Row.R_2, Col.C_4, decrease] = {
@@ -1103,10 +1103,10 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             }
 
             val cancel = buildItemStack(REDSTONE_BLOCK) {
-                displayName = "&cCancel filter"
+                setDisplayName("&cCancel filter")
             }
             val accept = buildItemStack(EMERALD_BLOCK) {
-                displayName = "&aAccept filter"
+                setDisplayName("&aAccept filter")
             }
 
             this[Row.R_3, Col.C_1, cancel] = {
@@ -1138,7 +1138,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
 
         private fun refreshDisplay() {
             val display = buildItemStack(EXPERIENCE_BOTTLE, chant.chant[enchantment] ?: 1) {
-                displayName = "&fCurrent"
+                setDisplayName("&fCurrent")
                 lore = listOf("  &a${chant.chant[enchantment] ?: 1}")
             }
 
@@ -1175,7 +1175,7 @@ sealed class FilterCompanyMarketMenu(target: String) : Menu("&nFiltering&r &l»&
             initBackButton(this@FilterCompanyMarketMenu, plugin, Row.R_4, Col.C_5)
 
             val clearItem = buildItemStack(REDSTONE_BLOCK) {
-                displayName = "&cReset to nothing"
+                setDisplayName("&cReset to nothing")
             }
 
             this[Row.R_4, Col.C_1, clearItem] = {

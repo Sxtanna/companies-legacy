@@ -16,7 +16,7 @@ import org.bukkit.Material
 import org.bukkit.Material.AIR
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import java.util.*
+import java.util.UUID
 
 class Company() : Named, Unique<UUID>, Iconable, Searchable {
     constructor(name: String) : this() {
@@ -55,7 +55,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
                                    block = {
                                        hideEverything()
 
-                                       displayName = "&f${strip(name)}"
+                                       setDisplayName("&f${strip(name)}")
                                        lore = listOf("",
                                                      "",
                                                      "&7Employees: &a${staffer.size}",
@@ -65,7 +65,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
                                        updateItemMeta(this) {
                                            hideEverything()
 
-                                           displayName = "&e${strip(name)}"
+                                           setDisplayName("&e${strip(name)}")
                                            lore = listOf("",
                                                          "",
                                                          "&7Employees: &a${staffer.size}",
@@ -78,7 +78,7 @@ class Company() : Named, Unique<UUID>, Iconable, Searchable {
             buildItemStack(type) {
                 hideEverything()
 
-                displayName = "&f${strip(name)}"
+                setDisplayName("&f${strip(name)}")
                 lore = listOf("",
                               "",
                               "&7Employees: &a${staffer.size}",

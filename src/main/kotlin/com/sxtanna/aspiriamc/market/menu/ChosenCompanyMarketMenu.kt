@@ -46,7 +46,7 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
                     override fun passLore(): List<String> {
                         return listOf(
                             "",
-                            "&7Buy &a${icon.itemMeta.displayName} &7for &a$${it.cost.toReadableString()}"
+                            "&7Buy &a${icon.itemMeta?.displayName} &7for &a$${it.cost.toReadableString()}"
                                      )
                     }
 
@@ -155,7 +155,7 @@ class ChosenCompanyMarketMenu(val plugin: Companies, val company: Company, val p
 
     private fun setupCompanyFilter() {
         val button = buildItemStack(HOPPER) {
-            displayName = "&fFilter items"
+            setDisplayName("&fFilter items")
         }
 
         this[Row.R_6, Col.C_1, button] = {

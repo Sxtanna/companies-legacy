@@ -35,14 +35,14 @@ abstract class ConfirmationMenu(prompt: String) : Menu(prompt, R_3) {
     override fun build() {
 
         val lineItem = buildItemStack(WHITE_STAINED_GLASS_PANE) {
-            displayName = " "
+            setDisplayName(" ")
         }
         val passItem = buildItemStack(LIME_STAINED_GLASS_PANE) {
-            displayName = passName()
+            setDisplayName(passName())
             lore = passLore()
         }
         val failItem = buildItemStack(RED_STAINED_GLASS_PANE) {
-            displayName = failName()
+            setDisplayName(failName())
             lore = failLore()
         }
 

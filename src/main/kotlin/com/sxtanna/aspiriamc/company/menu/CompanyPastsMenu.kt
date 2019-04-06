@@ -14,14 +14,14 @@ import com.sxtanna.aspiriamc.reports.Reports
 import org.bukkit.Material.STRUCTURE_VOID
 import java.util.concurrent.TimeUnit
 
-class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit, val reports: List<Reports.Purchase.Item>, val prevMenu: Menu? = null) : Menu("&a${reports.size} &7Purchases", Row.R_6) {
+class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit, val reports: List<Reports.Transaction.Purchase.Item>, val prevMenu: Menu? = null) : Menu("&a${reports.size} &7Purchases", Row.R_6) {
 
     private val pagination = ChosenPagination()
 
     override fun build() {
 
         val info = buildItemStack(STRUCTURE_VOID) {
-            displayName = "&fPurchases from the past &9$time &f${unit.properName()}"
+            setDisplayName("&fPurchases from the past &9$time &f${unit.properName()}")
 
             lore = listOf("",
                           "&7Company: ${company.name}")
@@ -44,7 +44,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
             }
 
             val icon = buildItemStack(item) {
-                lore = listOf(*(if (lore != null) lore else listOf("")).toTypedArray(),
+                lore = listOf(*(lore ?: listOf("")).toTypedArray(),
                               "&8&m                       ",
                               "&7Cost: &a$${it.amount}",
                               "&7Sold By: ${it.from.let(company.plugin.stafferManager.names::get)}",
@@ -64,7 +64,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
     }
 
 
-    private fun companyPurchases(): List<List<Reports.Purchase.Item>> {
+    private fun companyPurchases(): List<List<Reports.Transaction.Purchase.Item>> {
         return reports.sortedBy { it.occurredAt }
                        .chunked(36)
                        .takeIf {
@@ -72,7 +72,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
                        } ?: listOf(emptyList())
     }
 
-    private fun transactionData(report: Reports.Purchase.Item): Array<String> {
+    private fun transactionData(report: Reports.Transaction.Purchase.Item): Array<String> {
         val transactions = report.transactions.entries.toList()
 
         var data = transactions.take(3).map {
@@ -95,7 +95,7 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
     }
 
 
-    inner class ChosenPagination : Pagination<List<Reports.Purchase.Item>>(companyPurchases()) {
+    inner class ChosenPagination : Pagination<List<Reports.Transaction.Purchase.Item>>(companyPurchases()) {
 
         override fun prevCoords() = Row.R_6 to Col.C_4
 

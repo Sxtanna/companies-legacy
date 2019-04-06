@@ -22,7 +22,7 @@ import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.util.io.BukkitObjectInputStream
 import org.bukkit.util.io.BukkitObjectOutputStream
 import java.io.*
-import java.util.*
+import java.util.Base64
 
 typealias BukkitCommand = Command
 
@@ -80,7 +80,7 @@ fun color(text: String): String {
 }
 
 fun strip(text: String): String {
-    return ChatColor.stripColor(color(text))
+    return ChatColor.stripColor(color(text)) ?: text
 }
 
 
@@ -88,7 +88,7 @@ fun itemStackName(item: ItemStack): String {
     val meta = (if (item.hasItemMeta()) item.itemMeta else null) ?: return item.type.properName()
 
     return if (meta is BookMeta && meta.hasTitle()) {
-        meta.title
+        meta.title ?: ""
     } else if (meta.hasDisplayName()) {
         meta.displayName
     } else {
@@ -148,14 +148,14 @@ fun base64ToItemStack(text: String): Result<ItemStack> = Result.of {
 }
 
 fun updateItemMeta(item: ItemStack, block: ItemMeta.() -> Unit): ItemStack {
-    val meta = item.itemMeta.apply(block)
+    val meta = item.itemMeta?.apply(block) ?: return item
 
     if (meta.hasDisplayName()) {
-        meta.displayName = color(meta.displayName)
+        meta.setDisplayName(color(meta.displayName))
     }
 
     if (meta.hasLore()) {
-        meta.lore = meta.lore.map(::color)
+        meta.lore = meta.lore?.map(::color)
     }
 
     item.itemMeta = meta

@@ -37,7 +37,7 @@ interface Searchable {
                 return buildItemStack(PAPER) {
                     hideEverything()
 
-                    displayName = "&eName"
+                    setDisplayName("&eName")
 
                     if (enabled) {
                         addEnchant(DAMAGE_ALL, 1, true)
@@ -64,7 +64,7 @@ interface Searchable {
                 return buildItemStack(SUNFLOWER) {
                     hideEverything()
 
-                    displayName = "&eCost"
+                    setDisplayName("&eCost")
 
                     if (enabled) {
                         addEnchant(DAMAGE_ALL, 1, true)
@@ -99,7 +99,7 @@ interface Searchable {
                 return buildItemStack(GRASS_BLOCK) {
                     hideEverything()
 
-                    displayName = "&eType"
+                    setDisplayName("&eType")
 
                     if (enabled) {
                         addEnchant(DAMAGE_ALL, 1, true)
@@ -130,7 +130,7 @@ interface Searchable {
                     return buildItemStack(MAP) {
                         hideEverything()
 
-                        displayName = "&eCount"
+                        setDisplayName("&eCount")
 
                         if (enabled) {
                             addEnchant(DAMAGE_ALL, 1, true)
@@ -159,14 +159,14 @@ interface Searchable {
                             FIREWORK_STAR
                         }
                         else -> {
-                            Material.getMaterial("${col.name}_WOOL")
+                            requireNotNull(Material.getMaterial("${col.name}_WOOL"))
                         }
                     }
 
                     return buildItemStack(type) {
                         hideEverything()
 
-                        displayName = "&eColor"
+                        setDisplayName("&eColor")
 
                         if (enabled) {
                             addEnchant(DAMAGE_ALL, 1, true)
@@ -193,7 +193,7 @@ interface Searchable {
                     return buildItemStack(ENCHANTING_TABLE) {
                         hideEverything()
 
-                        displayName = "&eEnchantments"
+                        setDisplayName("&eEnchantments")
 
                         if (enabled) {
                             addEnchant(DAMAGE_ALL, 1, true)
@@ -221,7 +221,7 @@ interface Searchable {
                     return buildItemStack(ENCHANTED_BOOK) {
                         hideEverything()
 
-                        displayName = "&e${enchantment.properName()}"
+                        setDisplayName("&e${enchantment.properName()}")
 
                         val level = chant[enchantment] ?: 0
 
@@ -257,7 +257,7 @@ interface Searchable {
                         return buildItemStack(STONE) {
                             hideEverything()
 
-                            displayName = "&eIs Block"
+                            setDisplayName("&eIs Block")
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -279,7 +279,7 @@ interface Searchable {
                         return buildItemStack(STICK) {
                             hideEverything()
 
-                            displayName = "&eIs Item"
+                            setDisplayName("&eIs Item")
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -299,7 +299,7 @@ interface Searchable {
                         return buildItemStack(COOKED_BEEF) {
                             hideEverything()
 
-                            displayName = "&eIs Edible"
+                            setDisplayName("&eIs Edible")
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -319,7 +319,7 @@ interface Searchable {
                         return buildItemStack(COAL) {
                             hideEverything()
 
-                            displayName = "&eIs Fuel"
+                            setDisplayName("&eIs Fuel")
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)
@@ -339,7 +339,7 @@ interface Searchable {
                         return buildItemStack(MUSIC_DISC_STAL) {
                             hideEverything()
 
-                            displayName = "&eIs Music Disc"
+                            setDisplayName("&eIs Music Disc")
 
                             if (enabled) {
                                 addEnchant(DAMAGE_ALL, 1, true)

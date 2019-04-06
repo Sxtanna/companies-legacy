@@ -139,10 +139,10 @@ sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
         : Configs<Material>("company.icon.def-icon") {
 
         override fun value(yaml: ConfigurationSection): Material {
-            val text = yaml.getString(path, "DIORITE")
+            val text = yaml.getString(path, "DIORITE") ?: "DIORITE"
 
             return try {
-                Material.matchMaterial(text)
+                checkNotNull(Material.matchMaterial(text))
             } catch (ex: Exception) {
                 Material.DIORITE
             }
@@ -174,7 +174,7 @@ sealed class Configs<T : Any>(final override val path: String) : ConfigPath<T> {
         : Configs<DatabaseType>("storage.database-type") {
 
         override fun value(yaml: ConfigurationSection): DatabaseType {
-            return DatabaseType.get(yaml.getString(path, "LOCAL").toUpperCase())
+            return DatabaseType.get((yaml.getString(path, "LOCAL") ?: "LOCAL").toUpperCase())
         }
 
     }

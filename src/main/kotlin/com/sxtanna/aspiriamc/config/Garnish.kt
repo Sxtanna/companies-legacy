@@ -17,7 +17,7 @@ sealed class Garnish<T : Any?> : ConfigPath<T> {
         abstract override val default: Sound
 
         override fun value(yaml: ConfigurationSection): Sound? {
-            val value = yaml.getString(path, default.name).toUpperCase()
+            val value = (yaml.getString(path, default.name) ?: default.name).toUpperCase()
 
             return if (value == "NONE") {
                 null

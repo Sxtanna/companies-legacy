@@ -219,7 +219,7 @@ class ReportsManager(override val plugin: Companies) : Manager("Reports") {
 
         transactions.putAll(remaining.associate { it to revenue })
 
-        reportPurchaseItem(product, company, buyer, transactions)
+        reportPurchaseItem(buyer, product, company, transactions)
     }
 
 
