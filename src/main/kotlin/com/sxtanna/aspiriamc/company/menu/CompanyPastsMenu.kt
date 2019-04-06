@@ -75,9 +75,13 @@ class CompanyPastsMenu(val company: Company, val time: Long, val unit: TimeUnit,
     private fun transactionData(report: Reports.Transaction.Purchase.Item): Array<String> {
         val transactions = report.transactions.entries.toList()
 
-        var data = transactions.take(3).map {
+        var data = transactions.take(3).mapNotNull {
             val name = if (it.key == company.uuid) company.name else company.plugin.stafferManager.names[it.key]
             val data = it.value.formatToTwoPlaces()
+
+            if (data == 0.0) {
+                return@mapNotNull null
+            }
 
             "&f$name: &a+$$data"
         }
