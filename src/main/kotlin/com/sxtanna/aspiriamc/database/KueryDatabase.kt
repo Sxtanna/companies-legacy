@@ -8,7 +8,6 @@ import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.DEF_KORM
 import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.EXECUTOR
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.exts.ensureUsable
-import com.sxtanna.aspiriamc.metrics.Metrics
 import com.sxtanna.aspiriamc.reports.Format
 import com.sxtanna.aspiriamc.reports.Reports
 import com.sxtanna.db.Kuery
@@ -175,12 +174,12 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
             }
         } else {
             select(base.REPORTS)
-                    .where(InDBReports::format) {
-                        it equals format
-                    }
-                    .where(InDBReports::occurred) {
-                        it moreThanOrEquals before
-                    }
+                .where(InDBReports::format) {
+                    it equals format
+                }
+                .where(InDBReports::occurred) {
+                    it moreThanOrEquals before
+                }
         }
 
         val value = reports.map(InDBReports::toData)
@@ -196,8 +195,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
         EXECUTOR.execute {
             try {
                 sql.invoke(block)
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 // ignored
             }
         }
@@ -302,17 +300,6 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
         override fun toData(): Reports {
             return Reports.Maker.make(DEF_KORM, data)
-        }
-
-    }
-
-    internal data class InDBMetrics(@PrimaryKey
-                                    val uuid: UUID)
-        : InDBData<Metrics> {
-
-
-        override fun toData(): Metrics {
-            return Metrics()
         }
 
     }
