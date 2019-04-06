@@ -80,7 +80,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
     }
 
 
-    fun top(onRetrieve: (companies: List<Company>) -> Unit) {
+    fun top(onRetrieve: (companies: Sequence<Company>) -> Unit) {
         topCache.attempt(onRetrieve)
     }
 
@@ -220,29 +220,13 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
     inner class TopCache {
 
-        /*private var out = 0L
-        private val max = 60_000L
-        private val top = mutableListOf<Company>()*/
+        fun attempt(onRetrieve: (companies: Sequence<Company>) -> Unit) {
+            sortedCompanies().take(plugin.configsManager.get(COMPANY_COMMAND_TOP_MAX)).apply(onRetrieve)
+        }
 
 
-        fun attempt(onRetrieve: (companies: List<Company>) -> Unit) {
-            companies.sortedByDescending { it.finance.balance }
-                    .take(plugin.configsManager.get(COMPANY_COMMAND_TOP_MAX))
-                    .apply(onRetrieve)
-
-            /*if (out == 0L || (currentTimeMillis() - out) >= max) {
-               plugin.database.topCompanies {
-                   out = currentTimeMillis()
-
-                   top.clear()
-                   top += it
-
-                   top.apply(onRetrieve)
-               }
-            }
-            else {
-                top.apply(onRetrieve)
-            }*/
+        private fun sortedCompanies(): Sequence<Company> {
+            return companies.asSequence().sortedByDescending { it.finance.balance }
         }
 
     }
