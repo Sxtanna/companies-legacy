@@ -110,8 +110,21 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
         }
     }
 
+    override fun saveCompany(data: Collection<Company>) {
+        accessDB {
+            plugin.logger.warning("saving ${data.size} companies to database started")
 
-    override fun allCompanies(returnSync: Boolean, onRetrieve: (companies: List<Company>) -> Unit) = sql {
+            insert(base.COMPANY,
+                   Update(InDBCompany::name, InDBCompany::icon, InDBCompany::tariffs, InDBCompany::balance, InDBCompany::account, InDBCompany::staffer, InDBCompany::product),
+                   data.map { InDBCompany(it) })
+
+            plugin.logger.warning("saving ${data.size} companies to database finished")
+
+        }
+    }
+
+
+    override fun allCompanies(returnSync: Boolean, onRetrieve: (companies: List<Company>) -> Unit) = accessDB {
         val (companies) = select(base.COMPANY)
 
         val values = companies.map(InDBCompany::toData)
@@ -271,8 +284,6 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
                                     val uuid: UUID,
                                     val format: Format,
                                     val occurred: Long,
-                                    @Size(30, 2)
-                                    val amount: Double,
                                     @Big
                                     val data: String)
         : InDBData<Reports> {
@@ -280,7 +291,6 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
             report.uuid,
             report.format,
             report.occurredAt,
-            report.amount,
             DEF_KORM.push(report))
 
 

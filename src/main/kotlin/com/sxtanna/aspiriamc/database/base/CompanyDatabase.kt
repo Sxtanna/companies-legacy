@@ -6,7 +6,7 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.reports.Format
 import com.sxtanna.aspiriamc.reports.Reports
-import java.util.*
+import java.util.UUID
 
 interface CompanyDatabase : Named, PluginDependant {
 
@@ -18,6 +18,8 @@ interface CompanyDatabase : Named, PluginDependant {
     fun saveCompany(data: Company) {
         saveCompany(data, true)
     }
+
+    fun saveCompany(data: Collection<Company>)
 
     fun saveCompany(data: Company, async: Boolean)
 

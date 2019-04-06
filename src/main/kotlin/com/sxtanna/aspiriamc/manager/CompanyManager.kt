@@ -13,7 +13,7 @@ import com.sxtanna.aspiriamc.manager.base.Manager
 import org.bukkit.entity.Player
 import java.io.File
 import java.lang.System.currentTimeMillis
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 
@@ -32,20 +32,30 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
         get() = plugin.configsManager.get(COMPANY_RENAME_FEE)
 
 
+    @Volatile
+    private var loading = true
+
+
     override fun enable() {
         sponsorManager.enable()
 
         plugin.companyDatabase.allCompanies(true, ::push)
 
+        while (loading) {
+            continue
+        }
+
+        plugin.logger.info("FINISHED LOADING COMPANIES FROM DATABASE")
+
         repeatAsync((20 * 60) * 5) {
-            companies.forEach { plugin.companyDatabase.saveCompany(it, false) }
+            plugin.companyDatabase.saveCompany(companies)
         }
     }
 
     override fun disable() {
         sponsorManager.disable()
 
-        cache.values.forEach(plugin.companyDatabase::saveCompany)
+        plugin.companyDatabase.saveCompany(cache.values)
         cache.clear()
     }
 
@@ -204,6 +214,7 @@ class CompanyManager(override val plugin: Companies) : Manager("Companies") {
 
     private fun push(data: List<Company>) {
         data.forEach(::push)
+        loading = false
     }
 
 

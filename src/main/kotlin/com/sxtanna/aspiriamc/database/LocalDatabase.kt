@@ -8,7 +8,7 @@ import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.reports.Format
 import com.sxtanna.aspiriamc.reports.Reports
 import com.sxtanna.aspiriamc.store.FileStore
-import java.util.*
+import java.util.UUID
 
 class LocalDatabase(override val plugin: Companies) : CompanyDatabase {
 
@@ -40,6 +40,10 @@ class LocalDatabase(override val plugin: Companies) : CompanyDatabase {
 
     override fun saveCompany(data: Company, async: Boolean) {
         companyStore.save(data)
+    }
+
+    override fun saveCompany(data: Collection<Company>) {
+        data.forEach { saveCompany(it, false) }
     }
 
 
