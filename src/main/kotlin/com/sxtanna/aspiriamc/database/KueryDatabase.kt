@@ -5,6 +5,7 @@ import com.sxtanna.aspiriamc.company.Company
 import com.sxtanna.aspiriamc.company.Staffer
 import com.sxtanna.aspiriamc.config.Configs.COMPANY_COMMAND_TOP_MAX
 import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.DEF_KORM
+import com.sxtanna.aspiriamc.database.KueryDatabase.Consts.EXECUTOR
 import com.sxtanna.aspiriamc.database.base.CompanyDatabase
 import com.sxtanna.aspiriamc.exts.ensureUsable
 import com.sxtanna.aspiriamc.reports.Format
@@ -19,10 +20,9 @@ import com.sxtanna.db.struct.Database
 import com.sxtanna.db.struct.Resolver
 import com.sxtanna.db.struct.base.Duplicate.Update
 import com.sxtanna.korm.Korm
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.bukkit.Material
-import java.util.*
+import java.util.UUID
+import java.util.concurrent.Executors
 
 class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
@@ -105,7 +105,7 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
             return insert()
         }
 
-        GlobalScope.launch {
+        EXECUTOR.execute {
             insert()
         }
     }
@@ -192,8 +192,13 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
 
     private fun accessDB(block: KueryTask.() -> Unit) {
-        GlobalScope.launch {
-            sql.invoke(block)
+        EXECUTOR.execute {
+            try {
+                sql.invoke(block)
+            }
+            catch (ex: Exception) {
+                // ignored
+            }
         }
     }
 
@@ -305,6 +310,8 @@ class KueryDatabase(override val plugin: Companies) : CompanyDatabase {
 
         val DEF_KORM = Korm()
         val DEF_UUID = UUID.randomUUID()
+
+        val EXECUTOR = Executors.newCachedThreadPool()
 
     }
 
