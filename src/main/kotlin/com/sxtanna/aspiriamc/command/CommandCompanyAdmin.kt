@@ -15,7 +15,7 @@ import com.sxtanna.aspiriamc.exts.properName
 import org.bukkit.Material
 import org.bukkit.Material.AIR
 import org.bukkit.entity.Player
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
@@ -30,6 +30,7 @@ class CommandCompanyAdmin(override val plugin: Companies)
         register(CommandCompanyFix())
         register(CommandCompanyPast())
         register(CommandCompanyView())
+        register(CommandCompanyInfo())
     }
 
 
@@ -291,7 +292,6 @@ class CommandCompanyAdmin(override val plugin: Companies)
                 "you must provide a valid company"
             }
 
-
             plugin.reportsManager.purchasesFromPast(company, time, unit) {
                 CompanyPastsMenu(company, time, unit, it).open(player)
             }
@@ -343,6 +343,41 @@ class CommandCompanyAdmin(override val plugin: Companies)
                 }
             }
         }
+    }
+
+    inner class CommandCompanyInfo : CommandBase {
+
+        override val name = "info"
+
+
+        override fun CommandContext.evaluate() {
+            val targetName = notNull(input.getOrNull(0)) {
+                "you must define the name of the player you who's info you want!"
+            }
+
+            retrieveStafferByName(targetName) { _, staffer ->
+
+                val company = plugin.quickAccessCompanyByCompanyUUID(staffer.companyUUID)
+
+                if (company != null) {
+                    return@retrieveStafferByName reply("&7player is ${if (company.isOwner(staffer.uuid)) "the owner" else "a member"} of the company &a${company.name}")
+                }
+
+                reply("&cplayer is not in a company")
+            }
+        }
+
+        override fun CommandContext.complete(): List<String> {
+            return when (input.size) {
+                1    -> {
+                    plugin.server.onlinePlayers.map(Player::getName).filterApplicable(0)
+                }
+                else -> {
+                    emptyList()
+                }
+            }
+        }
+
     }
 
 }
