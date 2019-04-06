@@ -7,4 +7,6 @@ api-version: 1.13
 
 website: https://gh.sxtanna.com
 
-depend: [Vault]
+depend:
+  - Vault
+  - AspiriaMCServer
